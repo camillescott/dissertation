@@ -1,0 +1,38 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install xelatex
+      run: sudo apt install -y texlive-xetex texlive-science
+    - name: Update conda
+      run: conda update -q conda
+    - name: Install conda dependencies
+      run: conda env create --force --file environment.yml
+    - name: Install aggiedown in R environment
+      run: |
+          export PATH="/usr/share/miniconda/bin:$PATH"
+          source activate dissertation
+          snakemake -j 1 --use-conda install_deps
+    - name: Run pipeline
+      run: |
+          export PATH="/usr/share/miniconda/bin:$PATH"
+          source activate dissertation
+          snakemake -j 1 --use-conda
+    - name: upload PDF to GH artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: dissertation.pdf
+        path: index/_book/dissertation.pdf
+    - name: Release
+      uses: fnkr/github-action-ghr@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+          GHR_PATH: index/_book/dissertation.pdf
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
