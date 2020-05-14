@@ -1,5 +1,5 @@
 rule all:
-  input: 'thesis/_book/thesis.pdf'
+  input: 'index/_book/dissertation.pdf'
 
 
 rule install_deps:
