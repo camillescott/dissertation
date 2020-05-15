@@ -1,11 +1,15 @@
+import platform
+
 rule all:
   input: 'index/_book/dissertation.pdf'
 
 
 rule install_deps:
   conda: 'envs/R.yml'
+  params:
+    tar = '/usr/bin/tar' if platform.system() == 'Darwin' else '/bin/tar'
   shell: """
-    TAR=/bin/tar R -e 'devtools::install_github("ryanpeek/aggiedown@ae99300d43bdccc16069efcc08198624c76eee0c", upgrade = "never")'
+    TAR={params.tar} R -e 'devtools::install_github("ryanpeek/aggiedown@ae99300d43bdccc16069efcc08198624c76eee0c", upgrade = "never")'
   """
 
 
@@ -21,6 +25,6 @@ rule build_thesis:
   shell: """
       cd index 
       rm -f _main.Rmd
-      R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', aggiedown::thesis_pdf(latex_engine = 'pdflatex'))"
+      R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', aggiedown::thesis_pdf(latex_engine = 'xelatex'))"
       mv _book/_main.pdf _book/dissertation.pdf
   """
