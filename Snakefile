@@ -27,4 +27,5 @@ rule build_thesis:
       rm -f _main.Rmd
       R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', aggiedown::thesis_pdf(latex_engine = 'xelatex'))"
       mv _book/_main.pdf _book/dissertation.pdf
+      cp _book/dissertation.pdf ../
   """
