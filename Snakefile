@@ -18,9 +18,16 @@ rule build_thesis:
   output: 'index/_book/dissertation.pdf'
   input:
     sources=expand('index/{rmd}.Rmd',
-                   rmd=('index', '00-intro', '01-chap1', '02-chap2',
-                        '03-chap3', '04-conclusion', '05-appendix',
-                        '98-colophon', '99-references')),
+                   rmd=('index',
+                        '00-intro',
+                        '01-chap1',
+                        '02-chap2',
+                        '03-chap3',
+                        '04-shmlast',
+                        '09-conclusion',
+                        '10-appendix',
+                        '98-colophon',
+                        '99-references')),
     bibliography='index/bib/dissertation.bib'
   shell: """
       cd index 
