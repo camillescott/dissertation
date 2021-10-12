@@ -101,3 +101,27 @@
         * Genomic vs txomic vs mtomic
         * downstream goals: assembly, classifcation, abundance
 * Sketching
+
+
+
+
+
+### de Bruijn Graphs and Their Uses in Omics
+
+A de Bruijn graph (dBG) $G(k, \Sigma)$ is a directed graph defined by its nodes, which are a set of fixed-length sequences of length $k$ over an alphabet $\Sigma$, and its edges, which exist when the sequences of a pair of nodes share a length $k-1$ suffix and prefix.
+This means that $G(k, \Sigma)$ has a maximum number of nodes $\| \Sigma \|^k$ and each node has a maximum in and out degree of $\| \Sigma \|$.
+If we define $pre(n_i)$ to be the length $k-1$ prefix of some node $n_i \in G$ and $suf(n_i)$ to be the length $k-1$ suffix, the out-neighbors of $n_i$ can be discovered by querying $\{ suf(n_i) + s,  \forall s \in \Sigma \}$ and the in-neighbors accordingly: that is to say, in this construction, known as the *node-centric* de Bruijn graph, the edges are implied by the set of nodes, and it is only necessary to use an efficient set data structure to implement a basic dBG.
+
+The length-$K$ sequences making up a dBG are referred to as $k$-mers.
+The nodes in a dBG with in on out-degree greater than $1$ are *decision nodes*, their associated $k$-mers *decision $k$-mers*.
+
+de Bruijn graphs have been used to great effect in genomics applications since they were first applied to them [@myers_toward_1995].
+The principle advantage of the dBG is its simplification of the process of overlap detection between sequences: $k$-mers can stored as hashed integers for faster querying, and length $k-1$ overlaps can be discovered by using the same method as edge detection.
+Hence, when a collection of sequences sampled from an underlying larger set of sequences is broken down into its constituent $k$-mers as a dBG, all $k$-mer overlaps are known implicitly. This property, and the methods extending it, can be used for genome assembly, sequence classification and comparison, genomic variant discovery, and full graph-based alignment.
+
+#### Compact de Bruijn Graphs
+
+While the standard de Bruijn graph is a useful abstraction, in practice, most implementations only use it as an intermediate representation.
+The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in and out-degree of $1$, such graphs contain large quantities of redundant $k$-mers; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in introduces $k$ new nodes in the graph.
+As a result, even small error and polymorphism rates in moderate sized data produce graphs with hundreds of millions or billions of nodes.
+

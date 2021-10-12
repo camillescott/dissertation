@@ -14,7 +14,8 @@ signature2: "Fereydoun Hormozdiari"
 abstract: |
   "Frogs are great. Ribbit Ribbit."
 acknowledgments: |
-  "My acknowledgments"
+  "The process of my PhD and the production of this thesis was a long a difficult process. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life."
+  Starting off in East Lansing, Michigan, at Michigan State University, 
 dedication: |
   "*One thing to remember is to talk to the animals. If you do, they will talk back to you. But if you don’t talk to them, they won’t talk back to you, then you won’t understand. And when you don’t understand, you will fear, and when you fear, you will destroy the animals, and if you destroy the animals, you will destroy yourself*"    
   (Chief Dan George, Tseil-Waututh Nation, North Vancouver)"
