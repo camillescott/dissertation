@@ -1,28 +1,6 @@
-```{r include_packages_2, include = FALSE}
-# This chunk ensures that the huskydown package is
-# installed and loaded. This huskydown package includes
-# the template files for the thesis and also two functions
-# used for labeling and referencing
-if(!require(devtools))
-  install.packages("devtools", repos = "http://cran.rstudio.com")
-if(!require(dplyr))
-    install.packages("dplyr", repos = "http://cran.rstudio.com")
-if(!require(ggplot2))
-    install.packages("ggplot2", repos = "http://cran.rstudio.com")
-if(!require(ggplot2))
-    install.packages("bookdown", repos = "http://cran.rstudio.com")
-if(!require(aggiedown)){
-  library(devtools)
-  devtools::install_github("rapeek/aggiedown")
-  }
-library(aggiedown)
-flights <- read.csv("data/flights.csv")
-```
-
-
 # shmlast: An improved implementation of Conditional Reciprocal Best Hits with LAST and Python {#ref-shmlast}
 
-\chaptermark {ref-shmlast}
+\chaptermark {shmlast}
 
 ## Summary
 
@@ -72,9 +50,10 @@ specificity of RBH.
 shmlast benefits immensely from the use of LAST over BLAST. It scales well by using gnu-parallel,
 and can be distributed across clusters for particularly large runs.
 
-![Performance comparison with [*Schizosaccharomyces pombe*](ftp://ftp.ebi.ac.uk/pub/databases/pombase/FASTA/cdna_nointrons_utrs.fa.gz) [@wood_pombase:_2012] as the query transcriptome and
-[*Nematostella vectensis*](ftp://ftp.ebi.ac.uk/pub/databases/reference_proteomes/QfO/Eukaryota/UP000001593_45351.fasta.gz) [@apweiler_protein_2004] as the target proteome.](figure/shmlast-perf.pdf)
+```{r shmlastperf, results="asis", echo=FALSE, fig.cap="Performance comparison with \\emph{Schizosaccharomyces pombe} as the query transcriptome and \\emph{Nematostella vectensis} as the target proteome.", out.extra="scale=0.75"}
+include_graphics("figure/shmlast-perf.pdf")
+```
 
-
-
-![CRBH model generated from the performance comparison. Hits with scores above the blue dotted line will be kept.](figure/sacPom.cdna.fa.x.Nematostella_vectensis.uniprot.pep.fa.crbl.model.plot.pdf)
+```{r shmlastmodel, results="asis", echo=FALSE, fig.cap="CRBH model generated from the performance comparison. Hits with scores above the blue dotted line will be kept.", out.extra="scale=0.75"}
+include_graphics("figure/sacPom.cdna.fa.x.Nematostella_vectensis.uniprot.pep.fa.crbl.model.plot.pdf")
+```
