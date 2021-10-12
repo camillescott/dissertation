@@ -2,7 +2,7 @@
 # UCD thesis fields
 title: "Streaming Methods for Assembly Graph Analysis"
 author: "Camille Scott"
-year: "2020"
+year: "2021"
 month: "August"
 program: "COMPUTER SCIENCE"
 uccampus: "DAVIS"

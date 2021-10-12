@@ -24,6 +24,7 @@ rule build_thesis:
                         '02-chap2',
                         '03-chap3',
                         '04-shmlast',
+                        '05-suchtree',
                         '09-conclusion',
                         '10-appendix',
                         '98-colophon',
