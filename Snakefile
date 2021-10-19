@@ -9,7 +9,7 @@ rule install_deps:
   params:
     tar = '/usr/bin/tar' if platform.system() == 'Darwin' else '/bin/tar'
   shell: """
-    TAR={params.tar} R -e 'devtools::install_github("ryanpeek/aggiedown@ae99300d43bdccc16069efcc08198624c76eee0c", upgrade = "never")'
+    TAR={params.tar} R -e 'devtools::install_github("camillescott/aggiedown@b7e13aa079afe470d1002ba18ffe6fd5c384cd4a", upgrade = "never")'
   """
 
 
@@ -25,6 +25,7 @@ rule build_thesis:
                         '03-chap3',
                         '04-shmlast',
                         '05-suchtree',
+                        '06-workflows',
                         '09-conclusion',
                         '10-appendix',
                         '98-colophon',
@@ -33,7 +34,7 @@ rule build_thesis:
   shell: """
       cd index 
       rm -f _main.Rmd
-      R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', aggiedown::thesis_pdf(latex_engine = 'xelatex'))"
+      R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', aggiedown::thesis_pdf(latex_engine = 'xelatex', pandoc_args=c('--top-level-division=chapter', '--filter=pandoc-manubot-cite')))"
       mv _book/_main.pdf _book/dissertation.pdf
       cp _book/dissertation.pdf ../
   """

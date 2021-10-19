@@ -25,6 +25,8 @@ site: bookdown::bookdown_site
 output: 
   aggiedown::thesis_pdf: 
     latex_engine: xelatex
+    toc_depth: 3
+    pandoc_args: ["--top-level-division=chapter", "--filter=pandoc-manubot-cite"]
 #  aggiedown::thesis_gitbook: default
 #  aggiedown::thesis_word: default
 #  aggiedown::thesis_epub: default
