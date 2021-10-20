@@ -34,7 +34,7 @@ rule build_thesis:
   shell: """
       cd index 
       rm -f _main.Rmd
-      R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', aggiedown::thesis_pdf(latex_engine = 'xelatex', pandoc_args=c('--top-level-division=chapter', '--filter=pandoc-manubot-cite')))"
+      R -e "options(tinytex.verbose = TRUE); bookdown::render_book('index.Rmd', output_format='aggiedown::thesis_pdf')"
       mv _book/_main.pdf _book/dissertation.pdf
       cp _book/dissertation.pdf ../
   """

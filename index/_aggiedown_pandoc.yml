@@ -1,0 +1,7 @@
+filters:
+  - pandoc-manubot-cite
+top-level-division: chapter
+metadata:
+  link-citations: true
+  manubot-requests-cache-path: _book/cache/requests-cache
+  manubot-bibliography-cache: _book/cache/references-cache.json
