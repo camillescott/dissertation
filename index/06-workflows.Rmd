@@ -54,23 +54,31 @@ Some of these steps can fail silently, producing incomplete intermediate files t
 Properly managing and executing all of these steps is vital, but can be both time-consuming and error-prone, even when automated with scripting languages such as bash.
 
 The emergence and maturation of workflow systems designed with bioinformatic challenges in mind has revolutionized computing in data intensive biology [@doi:10.1038/s41592-018-0046-7].
-Workflow systems contain powerful infrastructure for workflow management that can coordinate runtime behavior, self-monitor progress and resource usage, and compile reports documenting the results of a workflow (**Figure @fig:workflow**).
+Workflow systems contain powerful infrastructure for workflow management that can coordinate runtime behavior, self-monitor progress and resource usage, and compile reports documenting the results of a workflow (**Figure \@ref(fig:fig-workflows-workflow)**).
 These features ensure that the steps for data analysis are repeatable and at least minimally described from start to finish.
 When paired with proper software management, fully-contained workflows are scalable, robust to software updates, and executable across platforms, meaning they will likely still execute the same set of commands with little investment by the user after weeks, months, or years.
 
-![**Workflow Systems:** Bioinformatic workflow systems have built-in functionality that facilitates and simplifies running analysis pipelines.
+<!-- BEGIN workflow figure -->
+
+```{r fig-workflows-workflow, results="asis", echo=FALSE, fig.cap="(ref:fig-workflows-workflow)", out.width="90%", fig.align="center"}
+include_graphics("figure/workflows/workflow_figure.pdf")
+```
+
+(ref:fig-workflows-workflow) **Workflow Systems:** Bioinformatic workflow systems have built-in functionality that facilitates and simplifies running analysis pipelines.
 **A. Samples:** Workflow systems enable you to use the same code to run each step on each sample. Samples can be easily added if the analysis expands.
 **B. Software Management:** Integration with software management tools (e.g. conda, singularity, docker) can automate software installation for each step.
 **C. Branching, D. Parallelization, and E. Ordering:** Workflow systems handle conditional execution, ensuring that tasks are executed in the correct order for each sample file, including executing independent steps in parallel if possible given the resources provided.
 **F. Standard Steps:** Many steps are now considered "standard" (e.g. quality control). Workflow languages keep all information for a step together and can be written to enable you to remix and reuse individual steps across pipelines.
 **G. Rerun as necessary:** Workflow systems keep track of which steps executed properly and on which samples, and allow you to rerun failed steps (or additional steps) rather than re-executing the entire workflow.
 **H. Reporting:** Workflow languages enable comprehensive reporting on workflow execution and resource utilization by each tool.
-**I. Portability:** Analyses written in workflow languages (with integrated software management) can be run across computing systems without changes to code.](figure/workflows/workflow_figure.pdf){#fig:workflow}
+**I. Portability:** Analyses written in workflow languages (with integrated software management) can be run across computing systems without changes to code.
+
+<!-- END workflow figure -->
 
 To properly direct an analysis, workflow systems need to encode information about the relationships between every workflow step.
 In practice, this means that each analysis step must specify the input (or types of inputs) needed for that step, and the output (or types of outputs) being produced.
 This structure provides several additional benefits.
-First, workflows become minimally self-documented, as the directed graph produced by workflow systems can be exported and visualized, producing a graphical representation of the relationships between all steps in a pipeline (see **Figure @fig:rnaseq_workflow**).
+First, workflows become minimally self-documented, as the directed graph produced by workflow systems can be exported and visualized, producing a graphical representation of the relationships between all steps in a pipeline (see **Figure @ref:fig-rnaseq_workflow**).
 Next, workflows are more likely to be fully enclosed without undocumented steps that are executed by hand, meaning analyses are more likely to be reproducible.
 Finally, each step becomes a self-contained unit that can be used and re-used across multiple analysis workflows, so scientists can spend less time implementing standard steps, and more time on their specific research questions.
 In sum, the internal scaffolding provided by workflow systems helps build analyses that are generally better documented, repeatable, transferable, and scalable.
@@ -142,8 +150,13 @@ Container-based management is particularly useful for systems where some depende
 These have begun to be integrated into some bioinformatic tools [@doi:10.1093/gigascience/giy123], but have a steeper learning curve for independent use.
 In addition, standard installation of these managers requires system-wide installation permissions, requiring assistance from system administrators on most high-performance computing systems.
 
+<!-- BEGIN conda figure -->
 
-![**The conda package and environment manager simplifies software installation and management.**
+```{r fig-workflows-conda, results="asis", echo=FALSE, fig.cap="(ref:fig-workflows-conda)", fig.align="center", out.height="3in"}
+include_graphics("figure/workflows/conda_figure.pdf")
+```
+
+(ref:fig-workflows-conda) **The conda package and environment manager simplifies software installation and management.**
 **A. Conda Recipe Repositories:** Each program distributed via Conda has a "recipe" describing all software dependencies needed for installation using Conda (each of which must also be installable via Conda). Recipes are stored and managed in the cloud in separate "channels", some of which specialize in particular fields or languages (e.g. the "bioconda" channel specializes in bioinformatic software, while the "conda-forge" channel is a more general effort to provide and maintain standardized conda packages for a wide range of software) [@doi:10.1038/s41592-018-0046-7]. **B. Use Conda Environments to Avoid Installation Conflicts:**  Conda does not require root
 privileges for software installation, thus enabling use by researchers working on shared cluster systems. However, even user-based software installation can encounter dependency conflicts. For example, you might need to use python2 to install and run a program (e.g. older scripts written by members of your lab), while also using snakemake to execute your workflows (requires python>=3.5). By installing each program into an isolated "environment" that contains only the software required to run that
 program, you can ensure all programs used throughout your analysis will run without issue. Using small, separate environments for your software, specifying the desired software version, and building many simple environments to accommodate different steps in your workflow is critical for reducing the amount of time it takes conda to resolve dependency conflicts between different software tools ("solve" an environment). Conda virtual environments can be created and installed either on the command line, or via an environment YAML file, as shown. In this case, the environment file
@@ -152,7 +165,9 @@ When specified in a YAML file, conda environments are easily transferable betwee
 Broad community adoption has resulted in a proliferation of both conda-installable scientific software and tools that leverage conda installation specifications.
 For example, the Mamba package manager is an open source reimplementation of the conda manager that can install conda-style environments with increased efficiency  [@url:https://github.com/QuantStack/mamba]. 
 The BioContainers Registry is a project that automatically builds and distributes docker and singularity containers for bioinformatics software packages using each package's conda installation recipe [@doi:10.1101/2020.07.21.187609].
-](figure/workflows/conda_figure_ABC.pdf){#fig:conda_figure_ABC height=7in}
+
+
+<!-- END conda figure -->
 
 
 #### Getting started with software management
@@ -204,7 +219,15 @@ For workflow systems, this strategy can be implemented by tagging output files w
 For example, the file shown in **Figure {@fig:filenaming}** has been preprocessed with a quality control trimming step.
 For large workflows, placing results from each step of your analysis in isolated, descriptive folders can be essential for keeping your project workspace clean and organized.
 
-![Consistent and informative file naming improves organization and interpretability. For ease of grouping and referring to input files, it is useful to keep unique sample identification in the filename, often with a metadata file explaining the meaning of each unique descriptor. For analysis scripts, it can help to implement a numbering scheme, where the name of first file in the analysis begins with "00", the next with "01", etc. For output files, it can help to add a short, unique identifier to output files processed with each analysis step. This particular file is a RAD sequencing fastq file of a fish species that has been preprocessed with a fastq quality trimming tool.](figure/workflows/filenaming.pdf){#fig:filenaming height=2in}
+<!-- BEGIN filenaming figure -->
+
+```{r fig-workflows-filenaming, results="asis", echo=FALSE, fig.cap="(ref:fig-workflows-filenaming)", out.height="2in", fig.align="center"}
+include_graphics("figure/workflows/filenaming.pdf")
+```
+
+(ref:fig-workflows-filenaming) Consistent and informative file naming improves organization and interpretability. For ease of grouping and referring to input files, it is useful to keep unique sample identification in the filename, often with a metadata file explaining the meaning of each unique descriptor. For analysis scripts, it can help to implement a numbering scheme, where the name of first file in the analysis begins with "00", the next with "01", etc. For output files, it can help to add a short, unique identifier to output files processed with each analysis step. This particular file is a RAD sequencing fastq file of a fish species that has been preprocessed with a fastq quality trimming tool.
+
+<!-- END filenaming figure -->
 
 #### Store workflow metadata with the workflow
 
@@ -225,7 +248,13 @@ While this particular strategy cannot be automated, it is critical for interpret
 Computational notebooks allow users to combine narrative, code, and code output (e.g. visualizations) in a single location, enabling the user to conduct analysis and visually assess the results in a single file (see **Figure @fig:nb_figure**).
 These notebooks allow for fully documented iterative analysis development, and are particularly useful for data exploration and developing visualizations prior to integration into a workflow or as a report generated by a workflow that can be shared with collaborators.
 
-![**Examples of computational notebooks.** Computational notebooks allow the user to mix text, code, and results in one document.
+<!-- BEGIN notebooks figure -->
+
+```{r fig-workflows-notebooks, results="asis", echo=FALSE, fig.cap="(ref:fig-workflows-notebooks)", out.width="100%"}
+include_graphics("figure/workflows/nb_figure.pdf")
+```
+
+(ref:fig-workflows-notebooks) **Examples of computational notebooks.** Computational notebooks allow the user to mix text, code, and results in one document.
 **Panel A.** shows an RMarkdown document viewed in the RStudio integrated development environment, while **Panel B.** shows a rendered HTML file produced by knitting the RMarkdown document [@url:https://rmarkdown.rstudio.com/].
 **Panel C.** shows a Jupyter Notebook, where code, text, and results are rendered inline as each code chunk is executed [@url:https://dx.doi.org/10.3233/978-1-61499-649-1-87].
 The second grey chunk is a raw Markdown chunk with text that will be rendered inline when executed.
@@ -234,8 +263,8 @@ Computational notebooks facilitate sharing by packaging narrative, code, and vis
 Sharing can be enhanced further by packaging computational notebooks with tools like Binder [@doi:10.25080/Majora-4af1f417-011].
 Binder builds an executable environment (capable of running RStudio and Jupyter notebooks) out of a GitHub repository using package management systems and docker to build reproducible and executable software environments as specified in the repository.
 Binders can be shared with collaborators (or students in a classroom setting), and analysis and visualization can be ephemerally reproduced or altered from the code provided in computational notebooks.  
-](figure/workflows/nb_figure.png){#fig:nb_figure}
 
+<!-- END notebooks figure -->
 
 #### Visualize your workflow
 
@@ -261,7 +290,7 @@ Backing up your version controlled analysis in an online repository such as GitH
 
 When combined with online backups, version control systems also facilitate code and data availability and reproducibility for publication.
 For example, to preserve the version of code that produced published results, you can create a "release":  a snapshot of the current code and files in a GitHub repository.
-You can then generate a digital object identifier (DOI) for that release using a permanent documentation service such as Zenodo ([@url:https://zenodo.org]) and make it available to reviewers and beyond (see "sharing" section, below).
+You can then generate a digital object identifier (DOI) for that release using a permanent documentation service such as Zenodo [@url:https://zenodo.org] and make it available to reviewers and beyond (see "sharing" section, below).
 
 ### Share your workflow and analysis code
 
