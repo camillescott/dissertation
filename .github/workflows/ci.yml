@@ -19,14 +19,14 @@ jobs:
       run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
           source activate dissertation
-          snakemake -j 1 --use-conda install_deps
+          snakemake -j 1 --use-conda --conda-frontend mamba install_deps
       env:
         GITHUB_PAT: ${{ secrets.ACCESS_TOKEN }}
     - name: Run pipeline
       run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
           source activate dissertation
-          snakemake -j 1 --use-conda
+          snakemake -j 1 --use-conda --conda-frontend mamba
     - name: upload PDF to GH artifacts
       uses: actions/upload-artifact@v1
       with:
