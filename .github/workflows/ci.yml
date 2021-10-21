@@ -20,6 +20,8 @@ jobs:
           export PATH="/usr/share/miniconda/bin:$PATH"
           source activate dissertation
           snakemake -j 1 --use-conda install_deps
+      env:
+        GITHUB_PAT: ${{ secrets.ACCESS_TOKEN }}
     - name: Run pipeline
       run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
@@ -35,4 +37,4 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       env:
           GHR_PATH: index/_book/dissertation.pdf
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
