@@ -243,9 +243,9 @@ as we go. The discovered unitig is then split according the to the induced decis
 
 ### Implementation: the \texttt{goetia} library and tools{#cdbg-implementation}
 
-The streaming compactor is implemented in the `goetia` \cite{goetia} package, which is hosted on GitHub and available under the MIT license.
+The streaming compactor is implemented in the `goetia` [@url:https://github.com/camillescott/goetia] package, which is hosted on GitHub and available under the MIT license.
 It includes implementations of several exact and probabilistic $k$-mer sets and counters, pluggable hashing methods for those counters, de Bruijn graph implementations built on top of those counters, streaming file processing and parsing utilities, and the core streaming compaction implementation.
-This functionality is implemented as a C++ library, which can be installed and linked against as a shared library via `bioconda`[@gruning2018bioconda]. High-performance Python bindings are provided using `cppyy`[@cppyy2016], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
+This functionality is implemented as a C++ library, which can be installed and linked against as a shared library via `bioconda` [@doi:10.1038/s41592-018-0046-7]. High-performance Python bindings are provided using `cppyy` [@doi:10.1109/PyHPC.2016.008], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
 
 ### The cDBG can be constructed as sequences are downloaded in real time{#cdbg-download-realtime}
 
