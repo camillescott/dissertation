@@ -1,4 +1,4 @@
-chrome://vivaldi-webui/startpage?section=Speed-dials&activeSpeedDialIndex=0&background-color=#2f2f2fname: CI
+name: CI
 
 on: [push]
 
