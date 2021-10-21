@@ -1,4 +1,4 @@
-name: CI
+chrome://vivaldi-webui/startpage?section=Speed-dials&activeSpeedDialIndex=0&background-color=#2f2f2fname: CI
 
 on: [push]
 
@@ -35,4 +35,4 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       env:
           GHR_PATH: index/_book/dissertation.pdf
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
