@@ -2,3 +2,275 @@
 
 \chaptermark{Streaming cDBG Construction}
 
+## Abstract
+
+Traditionally, approaches for sequence fragment analysis such as assembly have been off-line; assembly, in particular, has been a process in which all data is first loaded into memory (generally, a graph abstraction) before further processing to extract
+contigs. As the volume of available data increases, and constantly updating data streams become ubiquitous, it is advantageous to consider
+on-line, or streaming, approaches which view the data as a stream of observations which are used to update
+an analysis or knowledge representation as they are integrated. Here, we present a streaming approach to construction of the
+compact de Bruijn Graph, a common assembly graph abstraction. The procedure is described theoretically, and a reference implementation
+is explored on several example data sets.
+
+## Background
+
+### Context
+
+Developments in high-throughput sequencing technology have made genomics, transcriptomics, metagenomics, and their variants core methods for biological inquiry.
+These sequencing technologies work by randomly sampling short fragments, or reads, from the underlying pool of DNA (or RNA) at a high redundancy,
+after which computational methods are used to assemble an approximation of the original sequence.
+While early methods directly computed overlaps between shallowly-sampled fragments [@roach_random_1995], deep sequencing has necessitated the development of more clever data structures and algorithms for assembly.
+Assembly graphs are one such abstraction [@myers_toward_1995; @simpson_theory_2015; @chikhi2016compacting], and are used as an intermediate
+representation in most extant assemblers; the de Bruijn graph [@myers_fragment_2005; @li_exploring_2012; @zerbino_velvet:_2008; @pevzner2001eulerian] is a core method for constructing assembly graphs.
+
+In the de Bruijn graph methods, reads are broken down into substrings of length $k$, or $k$-mers, from which the unique representatives become the nodes in the graph. Edges are
+defined when nodes have $k$-mers with exact overlaps of length $k-1$; this implicit definition of edges obviates the need for explicit overlap computation, making de Bruijn graphs well-suited to deep sequence experiments with short reads (see \ref{sec:definitions}).
+While this property greatly improves the time scaling of the assembly problem, the de Bruijn graph suffers from extremely high storage requirements due to the enumeration of $k$-mers.
+To address this, it is often compacted by the contraction of linear paths of non-branching $k$-mers, forming the compact de Bruin graph [@movahedi2012novo].
+
+A number of approaches for generating the compact de Bruijn Graph are already established. BCALM 2 generates a compact de Bruijn Graph in parallel using ranked minimizers [@chikhi2016compacting], building on their previous work on de Bruijn graph representation and compaction [@chikhi2015representation].
+Regardless of the method for generating the graph, almost all extant approaches share a paradigm: they are off-line algorithms, algorithms which require access to the entire sample before proceeding with compaction, and possibly make multiple passes over the data.
+In contrast, streaming (or online) algorithms view their data as a sequence of observations, and make one or fewer passes over that stream [@mcgregor_graph_2014], while semi-streaming algorithms aim for a small, constant number of passes, generally two or fewer [@feigenbaum_graph_2005].
+Streaming approaches have several advantages: they minimize hard disk access, which aids in efficiency; they are often able to produce results opportunistically, as soon as they are available; they offer the potential for feedback between the data stream and the processing; and often, they are suited for handling streams of infinite length.
+
+Here, we explore an implementation of a streaming de Bruijn graph compactor. Our implementation builds the compact de Bruijn graph opportunistically from a stream of sequence fragments, in one pass over the data. While semi-streaming de Bruijn graph compactors have been previously published [@rozov2017faucet; @el2016lightassembler], our implementation produces a compact de Bruijn graph in one pass. 
+
+### Definitions{#cdbg-definitions}
+
+For some string $s$, let $s[i]$ be the symbol at position $i$, $0$-indexed, and $s[i:j]$ be the substring of $s$ starting at position $i$ and not including position $j$. 
+If $s$ has length $L$, the $k$-mers of $s$ are given by $\texttt{kmers}(s) = \{s[i:i+k] \mid 0 \le i < L-k+1 \}$ ; that is, all length $k$ substrings of $s$.
+Let $\texttt{pre}(s)=u[0:k-1]$ and $\texttt{suf}(s)=s[L-k+1:L]$, that is, they yield the suffix and prefix of $s$.
+When $s$ is over the alphabet $\Sigma=\{A,C,G,T\})$, we call $s$ a "read" or "sequence".
+
+We then define a de Bruijn graph as $G_{k, \Sigma} = (N,E)$, where $N$ is a set of $k$-mers over alphabet $\Sigma$ and $E$ is the set of length $k$-1 exact overlaps between $k$-mers in $N$; that is, $E = \{e_{u \rightarrow v} \mid \texttt{suf}(u) = \texttt{pre}(v) \forall u,v \in N \}$. For convenience, assume $\Sigma=\{A,C,G,T\})$.
+
+Given a set of sequences $S$, the de Bruijn graph $G_k(S)$  has $N = \bigcup_{s \in S}{\texttt{kmers}(s)}$.
+Note that our edge definition admits edges even when the corresponding ($k+1$)-mers containing the two overlapping $k$-mers are not present in any sequence in $S$; this is the node-centric de Bruijn graph, with edged defined implicitly, rather than explicitly encoded.
+The in-neighbors and out-neighbors of a node $u$ can then be discovered by querying
+$\{\texttt{suf}(u) + \sigma \forall \sigma \in \Sigma\}$ and $\{\sigma + \texttt{pre}(u) \forall \sigma \in \Sigma\}$ in $G_k$, respectively. 
+ Let $\delta^-(u)$ and $\delta^+(u)$ yield these in-neighbors and out-neighbors.
+
+Now let $S$ be an ordered stream of sequences rather than a set. $S[t]$ is then the $t$th sequence in the stream, and $G_k(S)[t]$ is the de Bruijn graph with $N = \bigcup_{s \in S[0:t+1]}{\texttt{kmers}(s)}$.
+The total number of sequences in $S$ may or may not be known. We refer to the position $t$ in the stream as the $time$.
+$time$ may be analogous to actual observation time or simply position within a file, depending on the source of the stream.
+
+The compact de Bruijn graph (cDBG) is built from the  de Bruijn graph by converting non-branching paths of $k$-mers into single nodes.
+Define $C(G_k) = (N_c, E_c)$ as the compact de Bruijn graph built from $G_k$; for brevity, we call it $C_k$.
+A node ($k$-mer) $u \in G_k$ is a *decision node* ($k$-mer) if $|\delta^-(u)| > 1$ or $|\delta^+(u)| > 1$; that is, if its in-degree
+or out-degree is greater than one.
+$N_d$ is the complete set of decision nodes in $G_k$.
+Consider a connected path $p = \{u_0, u_1, ... , u_L\} \in G_k$. $p$ is a unitig if none of its nodes are decision nodes, and $p$ cannot be further extended in either direction; a unitig in $C_k$ is a unitig node.
+The complete set of unitig nodes will be called $U$, and we define $N_c = N_d \cup U$.
+The edges $E_c$ of the cDBG are then $\{e_{u \rightarrow v} \mid \texttt{suf}(u) = \texttt{pre}(v) \forall u,v \in N_c \}$.
+Note that this implies that, while decision nodes may be neighbors, unitig nodes may not.
+
+\begin{figure}
+	\centering
+	\missingfigure[figwidth=\textwidth]{Paneled figure showing the raw de Bruijn graph structure, the cDBG structure, and the relationship between the two.}
+	\caption{\label{fig:cdbg-structure}a)  The underlying de Bruijn graph. Decision nodes are colored red. 
+		b) The \texttt{goetia} compact de Bruijn graph model. Decision nodes are shared with the underlying de Bruijng graph, and unitig nodes are mapped back to minimizers of their corresponding unitig paths. }
+\end{figure}
+
+A unitig node with no neighboring decision nodes is an $island$; a unitig node with decision nodes on either side is $full$; and a unitig node with a decision node on only one side is a $tip$. The edge-case where $\texttt{pre}(v) = \texttt{suf}(v)$ for a unitig $v$ is called a $circular$ unitig.
+As with the de Bruijn graph, we refer to the cDBG at time $t$ as $C_k[t]$.
+
+
+## Methods {#cdbg-methods}
+
+Broadly, the underlying de Bruijn graph is implemented as a simple set. Sequences are broken down into constituent $k$-mers and hashed, and if a sequence contains any $k$-mers not previously observed, the cDBG is updated from the sequence. 
+
+%A subset of $k$-mers $T$ in the de Bruijn graph are "tagged" using a random minimizer scheme [@roberts2004reducing; @marccais2017improving]; these $k$-mers are used to map from the de Bruijn graph to unitig nodes in the cDBG.  The neighborhood of the new sequence is searched for decision nodes that could be disturbed by adding it, and unitig nodes that intersect its new $k$-mers. cDBG operations are placed on a work queue, where they are processed by a separate thread what manages updates to the cDBG.
+
+The next sections describe the compaction process and implementation in detail.
+
+### Construction of the de Bruijn Graph}{#cdbg-methods-construction}
+
+The de Bruijn graph is implemented as a simple set of $k$-mers.
+As such, it can be updated in a streaming fashion with no additional methods: a new sequence $s_t$ from $SS$ is broken down into its constituent $k$-mers and hashed using a rolling hash scheme [@lemire2010recursive], with new $k$-mers being added to the set and existing $k$-mers being incremented if a counting data structure is in use.
+The node-centric model saves memory at the cost of requiring a seed sequence to begin traversal.
+
+While the implementation supports several probabilistic data structures taken from the 
+\texttt{khmer} [@crusoe2015khmer; @pell_scaling_2012] package, the reference implementation uses an exact
+hash set provided by the Sparsepp library (github.com/greg7mdp/sparsepp), which is based on Google's sparsehash. 
+This limits the practical application to moderately-sized assembly graphs dude to memory overhead.
+
+### cDBG Data Structure {#cdbg-data-structure}
+
+The cDBG data structure consists of two maps: first, a basic hash table of known decision nodes $N_d$, and a map from $k$-mer hashes of the ends of unitig paths to the unitig nodes $U$. These two structures are sufficient to define the entire cDBG: neighbors of decision nodes are necessarily tips in $U$, and island unitigs can be discovered from their tips. However, in order to split existing unitigs, potentially long traversals would need to be made from induced decision $k$-mers to unitig ends; as such, we store an auxiliary map $T$ from the minimizers of the unitig paths to the unitigs. This sets the maximum traversal distance from an induced decision $k$-mer to find the unitig containing it to the window size $w$ of the minimizer.
+
+### Mutations to the cDBG{#cdbg-mutations}
+
+The streaming compact de Bruijn graph can be defined by its decision $k$-mers and the $k$-mers terminating its current unitigs. While unitigs are subject to mutation throughout streaming construction (splitting and merging), decision nodes within the cDBG are never deleted once created, a property which can be exploited for construction (CTB: during graph construction?).
+
+In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in $G_{t-1}$; that is, a $k$-mer first introduced in fragment $t$. A *new decision $k$-mer* is a new $k$-mer which is also a decision $k$-mer. An *induced decision $k$-mer* is a decision $k$-mer which is not new, but became a decision $k$-mer at time $t$. A *new unitig node* is a unitig comprising only new $k$-mers. An existing unitig node is *split* when one its $k$-mers becomes an induced decision $k$-mer, and two unitig nodes are merged when a path of new $k$-mers exists between two of their tip $k$-mers. Given a sequence $s_t \in SS$, the *segments* of $s_t$ are the paths of new $k$-mers in $s_t$, terminated at existing $k$-mers and new decision $k$-mers. Now, we will define the ways in which a segment can mutate the cDBG.
+
+#### Inserting New Sequences and Finding New Segments{#cdbg-insertion}
+
+The first step to updating the cDBG with a new sequence is to insert its $k$-mers into the dBG and divide its new $k$-mers into their constituent segments. Once we have the segments, we use them to update the state of the cDBG. \ref{FindSegments} describes this procedure: segment paths are split on existing $k$-mers and new decision $k$-mers.
+
+\begin{algorithm}[]
+	\DontPrintSemicolon
+	\KwData{dBG $G_{k,t-1}$, sequence stream $SS$}
+	\KwIn{sequence $s_t \in SS$ }
+	\KwResult{A list $\ell$ of new segments from $s_t$, set of new decision $k$-mers $\delta$}
+	$U \longleftarrow kmers(s_t)$\;
+	$P \longleftarrow \emptyset$\;
+	\For{$u \in U$}{
+		$P.append(G.query(u))$\;
+		$G.insert(u)$\;
+	}
+	$p \longleftarrow \bm{False}$\;
+	$v \longleftarrow U[0]$\;
+	$segment \longleftarrow \emptyset$\;
+	\For{$v \in U$, $q \in P$}{
+		\If{$q = \bm{True}$}{
+		
+			\If{$p \not= \bm{False}$}{
+				$segment \longleftarrow \{u\}$
+			}
+			\If{$G.lneighbors(v) > 1 \parallel G.rneighbors(v) > 1$}{
+				\If{$v \not= U[0]$}{
+					$\ell.append(segment)$
+				}
+				$segment \longleftarrow \{v\}$\;
+				$\delta.insert(v)$\;
+			}
+		}\ElseIf{$p = \bm{True}$}{
+			$\ell.append(segment)$\;
+			$segment \longleftarrow \emptyset$\;
+		}
+	
+		$u \longleftarrow v$\;
+		$p \longleftarrow q$\;
+	}
+	\If{$q = \bm{True}$}{
+		$\ell.append(segment)$
+	}
+	\Return{$\ell, \delta$}
+\caption{FindSegments\label{FindSegments}}
+\end{algorithm}
+
+Only the first and last $k$-mers in a segment, and new decision $k$-mers, are able to induce an existing $k$-mer to become a decision $k$-mer, and thereby potentially split an existing unitig. \ref{InduceDecisionKmers} lays out the procedure for handling these $k$-mersr; see \ref{inducers-lemma}.
+
+\begin{algorithm}
+	\DontPrintSemicolon
+	\KwData{dBG $G_{k,t-1}$, cDBG $C(G_{k,t-1})$}
+	\KwIn{$k$-mer $u$ which can induce decision $k$-mers, set $\Delta$ of new $k$-mers to ignore }
+	\For{$v \in G.neighbors(u)$}{
+		\If{$v \notin \Delta$ and $IsDecision(v)$}{
+			$C.NewDecisionNode(v)$\;
+			$C.SplitUnitig(v)$\;
+		}
+	}
+\caption{InduceDecisionKmers}\label{InduceDecisionKmers}
+\end{algorithm}
+
+With this procedure defined, we are able to update the cDBG from the new segment. We attempt to induce decision $k$-mers from the first and last $k$-mers in the segment and split unitigs if necessary; if the first or last $k$-mer is not a new decision $k$-mer and does not match up to an existing unitig tip \ref{tip-corollary}, we search for induced decision $k$-mers only in the direction away from the segment.
+If neither end of the segment matches to an existing unitig, we produce a new island unitig with just the segment. The full procedure is detailed in \ref{InsertSegment}.
+
+\begin{algorithm}
+	\DontPrintSemicolon
+	\KwData{dBG $G_{k,t-1}$, cDBG $C(G_{k,t-1})$}
+	\KwIn{list of $k$-mers comprising $segment$ from $s_t \in SS$, 
+			 set of new decision $k$-mers $\delta$,
+		 	 set of all new $k$-mers $\Delta$}
+	 
+	 $l, r \longleftarrow \bm{True}$\;
+	\If{$segment.first \in \delta$}{
+		$C.NewDecisionNode(segment.first)$\;
+		$InduceDecisionKmers(segment.first, \Delta)$\;
+	} \ElseIf{$G.lneighbors(segment.first) \notin C.U$} {
+		$InduceLeftDecisionKmers(segment.first, \Delta)$
+	} \Else{
+		$l \longleftarrow \bm{False}$\;
+		$C.ExtendUnitig(G.lneighbors(segment.first), segment)$\;
+	}
+
+	\If{$segment.last \in \delta$}{
+		$C.NewDecisionNode(segment.last)$\;
+		$InduceDecisionKmers(segment.last, \Delta)$\;
+	} \ElseIf{$.rneighbors(segmen.last) \notin C.U$ } {
+		$InduceRightDecisionKmers(segment.last, \Delta)$
+	} \Else {
+	    $r \longleftarrow \bm{False}$\;
+		$C.ExtendUnitig(G.rneighbors(segment.last), segment)$\;
+	}
+
+	\If{$l = r = \bm{True}$}{
+		$C.NewUnitig(segment)$
+	}
+\caption{InsertSegment}\label{InsertSegment}
+\end{algorithm}
+
+#### Splitting Existing Unitigs from Induced Decision $k$-mers}{#cdbgsplitting}
+
+Splitting an existing unitig is the most costly and common operation. When an existing $k$-mer $\mu$ is induced as
+a decision $k$-mer, we must traverse into the dBG until finding a hash which links to the unitig in the cDBG. If the induced
+decision $k$-mer is a tip, we will discover the unitig immediately: this is an edge case we refer to as clipping, in which the unitig is shortened and its tip reindexed. Otherwise, $\mu$ has exactly two neighbors which are not new from which we can traverse into the existing unitig. We traverse through unitig $k$-mers until stopping at either a tip or an element of $T$, checking the index
+as we go. The discovered unitig is then split according the to the induced decision $k$-mer.
+
+#### Correctness{#cdbg-correctness}
+
+\begin{lemma}[inducers-lemma]
+	\label{inducers-lemma}
+	A decision $k$-mer can only be induced by a new decision $k$-mer in $s_t$ or the first or last $k$-mers in a new segment of $s_t$.
+\end{lemma}
+
+```{proof}
+	Consider an existing non-decision $k$-mer $\mu \notin s_t$. An existing $k$-mer in $s_t$ cannot induce $\mu$ to be a decision $k$-mer: if so, $\mu$ would already be a decision $k$-mer. Now consider a new $k$-mer $\nu$ in the fragment which is not the first or last $k$-mer of a segment. In order for $\nu$ to induce $\mu$ to be a decision $k$-mer, $\mu$ must be a neighbor of $\nu$; because $\nu$ is not an end $k$-mer, it already has in-degree and out-degree at least one, from the new $k$-mers on either side of it. Now consider an end $k$-mer of a new segment: it has at least one new $k$-mer as its neighbor, and possibly an existing $k$-mer $\mu$ as its other neighbor. If $\mu$ is an in-neighbor of $\nu$, and already has out-degree of one, then $\nu$ can induce $\mu$ while being a non-decision $k$-mer; this exists for the case where $\mu$ is an out-neighbor as well.
+```
+
+\begin{lemma}[splitting-lemma]
+	\label{splitting-lemma}
+	An existing unitig node can only be split by an induced decision $k$-mer.
+\end{lemma}
+
+```{proof}
+	An existing unitig is, by definition, composed of existing non-decision $k$-mers. A new $k$-mer cannot split an existing unitig, also by definition: if the $k$-mer were part of the unitig, it would not be new. Thus, in order to split a unitig, we must convert an existing $k$-mer into a decision $k$-mer. 
+```
+
+\begin{corollary}
+	\label{tip-corollary}
+	If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a neighbor $\nu$ which is not a unitig tip, then $\nu$ must be an induced decision $k$-mer.
+\end{corollary}
+
+\begin{figure}
+	\centering
+	\missingfigure[figwidth=\textwidth]{Figure illustrated disturbed decision nodes.}
+	\caption{\label{fig:disturbed-dnodes}Caption describing decision nodes, references algorithm.}
+\end{figure}
+
+## Results{#cdbg-results}
+
+### Implementation: the \texttt{goetia} library and tools{#cdbg-implementation}
+
+The streaming compactor is implemented in the `goetia` \cite{goetia} package, which is hosted on GitHub and available under the MIT license.
+It includes implementations of several exact and probabilistic $k$-mer sets and counters, pluggable hashing methods for those counters, de Bruijn graph implementations built on top of those counters, streaming file processing and parsing utilities, and the core streaming compaction implementation.
+This functionality is implemented as a C++ library, which can be installed and linked against as a shared library via `bioconda`[@gruning2018bioconda]. High-performance Python bindings are provided using `cppyy`[@cppyy2016], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
+
+### The cDBG can be constructed as sequences are downloaded in real time{#cdbg-download-realtime}
+
+Because 
+
+% Should we even do benchmarking? Goetia is slow compared to offline approaches, there's not getting around it.
+
+% Probably better to show a streaming result from a direct download. Can show disk access as well. Then things are framed as: goetia can build the graph as fast as a reasonable internet connection can download the sequences from a remote source.
+
+### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs{#cdbg-approaches}
+
+\begin{figure}
+	\centering
+	\missingfigure[figwidth=\textwidth]{Assembly graph growth on exemplar data.}
+	\caption{\label{fig:exemplars}A figure with unit-scaled growth for a transcriptome, a genome, and a metagenome; or possibly, average trendlines for a few of each. I think a better metric for global structure should be used here: either Laplacian spectrum, or graphlet kernel spectrum.}
+\end{figure}
+
+Explore assembly graph statistics for txomes, genomes, and metagenomes. Idea is to briefly describe general trends in assembly graph growth for different data types. This also illustrates that the approach can scale.
+
+
+### Compaction can be included in Low Overhead Pipelines{#cdbg-pipelines}
+
+## Conclusions{#cdbg-conclusions}
+
+* Streaming algorithms are practically useful.
+* Streaming analysis of assembly graphs provides new insights into their structure.
+* Future applications for real-time long read technology.
+* Discussion of accessibility.

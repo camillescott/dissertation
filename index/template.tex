@@ -18,7 +18,7 @@ $endif$
 %--- Packages ---------------------------------------------------------
 \usepackage[lofdepth,lotdepth,caption=false]{subfig}
 \usepackage{fancyhdr}
-\usepackage{amsmath, amssymb, graphicx}
+\usepackage{amsmath, amssymb, amsthm, graphicx}
 \usepackage{xspace}
 \usepackage{braket}
 \usepackage{color}
@@ -27,6 +27,12 @@ $endif$
 \usepackage{array}
 \usepackage{ifxetex,ifluatex}
 \usepackage{etoolbox}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{bm}
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
 
 
 % TODOs
@@ -53,7 +59,9 @@ $endif$
 
 %---New Definitions and Commands------------------------------------------------------
 
-\newtheorem{theorem}{Jibberish}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
 
 \bibliography{references}
 
@@ -76,7 +84,7 @@ $endif$
     \usepackage[utf8]{inputenc}
   \fi
 \fi
-\DefineShortVerb[commandchars=\\\{\}]{\|}
+% \DefineShortVerb[commandchars=\\\{\}]{\|}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
 % Add ',fontsize=\small' for more characters per line
 \newenvironment{Shaded}{}{}
