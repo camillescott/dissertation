@@ -7,18 +7,86 @@ If you feel it necessary to include an appendix, it goes here.
 -->
 
 
-# The First Appendix
+# `goetia`
 
-This first appendix includes all of the R chunks of code that were hidden throughout the document (using the `include = FALSE` chunk tag) to help with readibility and/or setup.
+`goetia` is an open source software package implementing the methods described in this dissertation.
+It comprises three main components:
+1. A C++ library, `libgoetia`, which implements $k$-mer storage and hashing, de Bruijn graph traversal, file and stream sequence parsing, sketch construction, and sequence filtering;2
+2. A set of Python bindings for `libgoetia`, generated with `cppyy` [@doi:10.1109/PyHPC.2016.008], which expose the library in a user friendly form;
+3. A Python library implementing asynchronous interaction with `libgoetia`'s various processors, the `goetia` command-line interface, and a suite of unit tests.
 
-**In the main Rmd file**
+All code is released under the MIT license and hosted on GitHub [@url:https://github.com/camillescott/goetia].
+The package is distributed via the `conda` ecosystem on the `bioconda` channel [@doi:10.1038/s41592-018-0046-7].
+Due to the complexity of the build process introduced by `cppyy`, the package is not currently distributed on PyPI; distribution on PyPI may be explored in the future if the effort appears worthwhile.
 
-```{r ref.label='include_packages', results='hide', echo = TRUE}
-```
+## `libgoetia`
 
-**In Chapter \@ref(ref-labels):**
+The C++ library is responsible for the "heavy lifting" of the package.
+To enable composibility and efficiency, it makes much use of of templating and the curiously-recurring template pattern (CRTP) to avoid virtual function calls.
+The library is organized into namespaces by purpose.
 
-```{r ref.label='include_packages_2', results='hide', echo = TRUE}
-```
+### `goetia::hashing`
+
+### `goetia::storage`
+
+Storage classes implement efficient $k$-mer collections.
+All follow a base interface named `Storage`, which takes a template parameter `value_type` for the type of the hashed $k$-mers to be stored.
+The interface defines the following core methods:
+
+- `insert(value_type)`: Insert an item into the collection, incrementing the associated counter if supported, and returns `true` if the item is newly observed.
+- `insert_and_query(value_type)`: Perform an `insert` and return the count after insertion.
+- `query(value_type)`: Retrieve the existence or count of the item.
+- `n_unique_kmers()`: Report the number of unique elements in the collection.
+- `reset()`: Remove all elements from the collection and return to default state.
+
+Collections implementing the interface also define the following traits:
+
+- `is_counting`: Whether the collection supports abundance counts or only behaves as a set.
+- `is_probabilistic`: Whether the collection tracks items exactly or with error.
+- `bits_per_slot`: Number of bits used per item, for bit-vector based data structures.
+- `params_type`: Tuple for the parameter types needed to instantiate the class.
+- `default_params`: Default parameters to use if not supplied.
+
+`goetia` provides a number of data structures implementing this interface.
+
+#### Basic Storage Classes
+
+##### Bloom filter: `BitStorage`
+
+A Bloom filter is a probabilistic, sub-linear space data structure for set membership testing.
+It uses reduced space at the cost of a small, predictable false positive rate, with no false negatives.
+Memory usage is fixed; it is parameterized by size of its underlying bit vector and a number of hash functions, the two of which together decide the false positive rate [@doi:10.1145/362686.362692].
+It is not possible the enumerate the members of a Bloom filter.
+The Bloom filter code is a modified version of that in the `khmer` [@doi:10.12688/f1000research.6924.1] library.
+
+##### Count-min sketch: `NibbleStorage` and `ByteStorage`
+
+A Count-Min sketch [@doi:10.1145/362686.362692] is another probabilistic, sub-linear space data structure.
+It operates similarly to the Bloom filter, but stores an approximate count of its items instead of simple presence.
+`NibbleStorage` uses 4-bit counters, while `ByteStorage` uses 8-bit counters.
+These too are modified versions of the those found in `khmer`.
+
+##### `Sparsepp` Hash Set: `SparseppSetStorage`
+
+An exact set representation using the `Sparsepp` hash table [@url:https://github.com/greg7mdp/sparsepp].
+`Sparsepp` is an iteration on Google's `sparsehash` [@https://github.com/sparsehash/sparsehash], and provides a highly memory-efficient set with fast $O(1)$ insertions and queries.
+
+##### `parallel-hashmap`: `PHMapStorage`
+
+Another exact set representation using the `parallel-hashmap` library [@url:https://github.com/greg7mdp/parallel-hashmap].
+Written by the same authors as a successor `Sparsepp`, it is an essentially unilateral improvement.
+It uses SIMD instructions for internal probing and is optionally thread-safe.
+
+##### Counting Quotient Filter: `QFStorage`
+
+#### Partitioned Storage
+
+### `goetia::dbg`
+
+### `goetia::traversal`
+
+### `goetia::sketches`
+
+### `goetia::`: General Utilities
 
 # The Second Appendix, for Fun
