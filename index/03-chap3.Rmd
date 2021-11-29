@@ -24,3 +24,126 @@ flights <- read.csv("data/flights.csv")
 
 \chaptermark {dammit annotator}
 
+## Abstract
+
+dammit is a automated de novo transcriptome annotation pipeline designed with the express purpose of being easy to install and configure.
+While a number of annotation protocols and software pipelines already existed when dammit was first conceived, they tended to be unapproachable to beginners.
+dammit automates database download and preparation, as well as dependency installation; it need only be installed as a Python package via PyPI or conda, after Snakemake is used internally to manage environments for each annotation step.
+Annotation is achieved through homology searches against protein databases, hidden Markov model and covariance model profile searching for protein domains and non-coding RNAs, gene model prediction, completeness
+assessment, and orthology searches against user databases.
+dammit uses mostly easily available software such as hmmer and Infernal, occasionally making use of less well-known software in the pursuit of performance.
+The resulting annotations are collected and merged into a Generic Feature Format Version 3 (GFF3) file, with annotation summaries added to FASTA headers.
+dammit also exposes a suite of simple command line tools for file formation conversion, homology filtering, metrics, and FASTA munging.
+
+## Introduction
+
+RNA-seq has become an important tool for genomics. de novo assemblies of RNA-seq data
+provide a useful resource for researchers attempting to characterize the gene content of an organism, especially in non-model
+systems \cite{garber_computational_2011}. Importantly, due to its cost-effectiveness, transcriptome assembly is an accessible 
+option for labs with limited resources wishing to start using sequencing technology. Many uses for transcriptomes require a usable annotation, and annotators
+often make for complex and unwieldy software. Due to their tendency to rely on a variety of third-party software and 
+databases, they can be difficult to install and configure, especially for those with limited bioinformatics expertise (such as those wishing to start
+using sequencing technology). To make matters worse, many annotators trade performance for familiarity in their supporting software (eg. BLAST). This unfortunate combination of attributes makes many annotators very not-rad.
+
+dammit addresses these issues by fully embracing a super rad philosophy of openness. I extend the traditional philosophy of
+openness to encompass the \textit{accessibility} and
+\textit{availability} of a piece of software and its required third-party tools: software with a cumbersome installation process 
+or unstable hosting is no more open than a proprietary counterpart. Further, accessible software should be able to be run 
+outside the confines of a supercomputing cluster in a reasonable time frame.
+
+There are several other annotators targeted at transcriptomes that do not fulfill these requirements. The Broad Institutes's Trinotate fulfills a similar
+niche, but relies on the familiar but slow BLAST+ \cite{altschul_basic_1990} and the cumbersome rnammer \cite{lagesen_rnammer:_2007} 
+while embracing a protocol format over automation. FastAnnotator \cite{chen_fastannotator--efficient_2012} tries to alleviate
+the accessibility issue with a web-based approach, which trades difficult installation for the uncertainty of maintaining and funding web services. 
+dammit provides a super rad solution for users wanting local installation, good performance, and ease-of-use.
+
+## Methods
+
+### Implementation
+
+dammit is written entirely with Python. Each step in the database preparation and annotation processes is decomposed
+into a \href{http://pydoit.org}{pydoit} task, which allows for easy dependency tracking and resume capability. numpy and pandas \cite{van_der_walt_numpy_2011}\cite{mckinney_data_2010} are leveraged
+heavily for dealing with tabular data, both for ease of implementation and increased speed. A simple extension system
+allows developers to register new tasks with the core application and extend the pipeline. Configuration is handled through
+a JSON file. Each stage of the annotation pipeline outputs both its own format (for example, MAF for LAST) and 
+a more easily parsed CSV version.
+
+All documentation is written in reStructuredText and managed with Sphinx. Documentation is hosted on a github
+pages site at \href{http://www.camillescott.org/dammit}{camillescott.org/dammit} and mirrored at 
+\href{http://dammit.readthedocs.org}{dammit.readthedocs.org}.
+
+### Operation
+
+dammit is developed and tested on both 64-bit Linux and Mac OSX. Acceptance tests are run on
+Ubuntu 14.04, and official installation instructions are provided for Ubuntu with Python 2.7 and
+3.5. Anaconda is the recommended Python distribution, but system Python installations are also
+usable.
+
+The program is divided into three main modules: \texttt{dammit dependencies}, which checks
+that all third-party dependencies are satisfied; \texttt{dammit databases}, which checks whether
+databases are installed and retrieves and prepares them if necessary; and \texttt{dammit annotate},
+which contains the actual annotation pipeline. These submodules are explained in further detail in the
+use cases section.
+
+Hardware requirements vary mostly with the databases used for annotation and their preparation.
+Database preparation for a default run can be completed in under 16 GB of RAM, with the most
+intensive step being LAST's \texttt{lastdb}; preparation including uniref90 with the \texttt{--full} 
+option uses considerably more RAM. Advanced users can make detailed adjustments to LAST's 
+parameters with the config file to reduce RAM and run-time.
+
+Annotation is less RAM intensive than the database preparation step, instead requiring more CPU time. 
+gnu-parallel \cite{tange_gnu_2011} is used to help scale the more intensive tasks. A default run splits the input file across multiple cores on a single
+machine. An experimental \texttt{--n-nodes} flag will attempt to scale across multiple nodes on a cluster; detailed instructions for environment
+configuration with Portable Batch System are included in the documentation. A typical
+run can be completed in less than 12 hours on a machine with 8 cores; once again, adding uniref90 with 
+\texttt{--full} greatly increases the required time.
+
+## Use Cases
+
+### Database Preparation
+
+Annotation necessarily requires a number of databases. dammit automates the retrieval and 
+preparation of its databases with the \texttt{dammit databases} submodule. Running this
+submodule checks for their presence by default; with the \texttt{--install} flag, they will be
+downloaded and prepared. dammit uses the following databases: 
+
+\begin{itemize}
+\item \textbf{Pfam-A}: Profile hidden markov models for searching protein domains with hmmer \cite{finn_pfam_2016}.
+\item \textbf{Rfam}: Covariance models for searching RNA secondary structure with Infernal \cite{griffiths-jones_rfam:_2003}.
+\item \textbf{OrthoDB}: Hierarchical collection of protein ortholog groups \cite{kriventseva_orthodb_2015}.
+\item \textbf{BUSCO}: Collections of core genes for major domains of life. dammit can use metazoa, vertebrata, arthropoda, and eukaryota \cite{simao_busco:_2015}.
+\item \textbf{uniref90}: A comprehensive collection of most known proteins clustered at 90\% sequence similarity \cite{suzek_uniref:_2007} Only downloaded when the
+\texttt{--full} option is used.
+\end{itemize}
+
+Databases are stored in the users home directory by default,
+and the location can be changed either with the \texttt{--database-dir} flag or by setting a 
+\texttt{DAMMIT\textunderscore DB\textunderscore DIR} environment variable. 
+
+### Annotation Pipeline
+
+\texttt{dammit annotate} takes a "standard" FASTA file as input. First, the FASTA headers are renamed and a mapping between the original
+and new names is output; this avoids the issues that some programs have with certain characters in the header lines. Then, a basic
+set of sequence statistics are gathered, such as the number of transcripts, the $k$-mer redundancy, and the GC percent. BUSCO 
+\cite{simao_busco:_2015} is run 
+in transcriptome mode to assess completeness using whichever BUSCO database is specified by the user. 
+TransDecoder.LongOrfs \cite{haas_novo_2013} then finds
+open reading frames and produces a set of basic protein translations; these translations are used to search against Pfam-A with
+hmmer \cite{durbin_biological_1998},
+which are then fed into TransDecoder.Predict to get a final set of gene model predictions. Infernal \cite{nawrocki_infernal_2013} 
+is used to search Rfam for ncRNAs.
+OrthoDB v8 and optionally uniref90 are searched using LAST \cite{sheetlin_frameshift_2014,kielbasa_adaptive_2011}
+If the user supplies any custom protein databases, they are searched for orthologs using Conditional Reciprocal Best Hits \cite{aubry_deep_2014}.
+
+An example annotation run on the file \texttt{cdna.fa} with the user-supplied protein database \texttt{pep.fa} might look like so:
+
+\texttt{dammit annotate cdna.fa --user-databases pep.fa --busco-group eukaryota --n\textunderscore threads 2}
+
+This will create a new folder called \texttt{cdna.fa.dammit}, which can be changed with the \texttt{--output} flag.
+This folder contains the files \texttt{cdna.fa.dammit.gff3} and \texttt{cdna.fa.dammit.fa}
+with the main results, along with
+many intermediate files. The GFF3 file contains the aggregated results, with coordinates in transcript space; this file
+can be furthered interrogated downstream with other analysis packages or viewed with an explorer such as IGV \cite{robinson_integrative_2011}.
+The GFF3 uses terms compliant with the Sequence Ontology Project \cite{eilbeck_sequence_2005}. dammit also outputs a new
+FASTA file with summary annotation information in each header line. 
+
