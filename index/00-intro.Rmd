@@ -24,6 +24,12 @@ library(knitr)
 * Overly-deep pipelines / intermediate data
 * Sea-change toward streaming methods due to nanopore
 
+Large-scale genome sequencing is one of the most paradigm-shifting technologies for biology of the 21st century.
+Since the sequencing of the human genome was declared complete in April of 2003, genomics has been a core part of the public
+conscience and rapidly grown as a tool for biological research.
+What started as a small-scale molecular biology method for understanding individual genes grew into projects mapping out the genomes of all major model organisms in great functional detail, sequencing entire populations of microbes from the environment, mapping hundreds of thousands of individual human genomes, and producing draft sequences for hundreds of thousands of species across the entire tree of life; as of 2021, the National Center for Biotechnology Information (NCBI) stored over 36 petabytes of raw sequencing information in its Sequence Read Archive (SRA), with many times that volume not submitted.
+
+
 ## Background
 
 * Sequencing technology
@@ -118,9 +124,6 @@ library(knitr)
 * Sketching
 
 
-
-
-
 ### de Bruijn Graphs and Their Uses in Omics
 
 A de Bruijn graph (dBG) $G(k, \Sigma)$ is a directed graph defined by its nodes, which are a set of fixed-length sequences of length $k$ over an alphabet $\Sigma$, and its edges, which exist when the sequences of a pair of nodes share a length $k-1$ suffix and prefix.
@@ -137,6 +140,6 @@ Hence, when a collection of sequences sampled from an underlying larger set of s
 #### Compact de Bruijn Graphs
 
 While the standard de Bruijn graph is a useful abstraction, in practice, most implementations only use it as an intermediate representation.
-The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in and out-degree of $1$, such graphs contain large quantities of redundant $k$-mers; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in introduces $k$ new nodes in the graph.
+The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in and out-degree of $1$, such graphs encode a lot of redundant information; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in the input sequences introduces $k$ new nodes in the graph.
 As a result, even small error and polymorphism rates in moderate sized data produce graphs with hundreds of millions or billions of nodes.
 
