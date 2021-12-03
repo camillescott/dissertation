@@ -42,8 +42,7 @@ provide a useful resource for researchers attempting to characterize the gene co
 systems \cite{garber_computational_2011}. Importantly, due to its cost-effectiveness, transcriptome assembly is an accessible 
 option for labs with limited resources wishing to start using sequencing technology. Many uses for transcriptomes require a usable annotation, and annotators
 often make for complex and unwieldy software. Due to their tendency to rely on a variety of third-party software and 
-databases, they can be difficult to install and configure, especially for those with limited bioinformatics expertise (such as those wishing to start
-using sequencing technology). To make matters worse, many annotators trade performance for familiarity in their supporting software (eg. BLAST). This unfortunate combination of attributes makes many annotators very not-rad.
+databases, they can be difficult to install and configure, especially for those with limited bioinformatics expertise. To make matters worse, many annotators trade performance for familiarity in their supporting software (eg. BLAST).
 
 dammit addresses these issues by fully embracing a super rad philosophy of openness. I extend the traditional philosophy of
 openness to encompass the \textit{accessibility} and
@@ -55,14 +54,20 @@ There are several other annotators targeted at transcriptomes that do not fulfil
 niche, but relies on the familiar but slow BLAST+ \cite{altschul_basic_1990} and the cumbersome rnammer \cite{lagesen_rnammer:_2007} 
 while embracing a protocol format over automation. FastAnnotator \cite{chen_fastannotator--efficient_2012} tries to alleviate
 the accessibility issue with a web-based approach, which trades difficult installation for the uncertainty of maintaining and funding web services. 
-dammit provides a super rad solution for users wanting local installation, good performance, and ease-of-use.
+dammit provides a solution for users wanting local installation, good performance, and ease-of-use.
 
 ## Methods
 
 ### Implementation
 
-dammit is written entirely with Python. Each step in the database preparation and annotation processes is decomposed
-into a \href{http://pydoit.org}{pydoit} task, which allows for easy dependency tracking and resume capability. numpy and pandas \cite{van_der_walt_numpy_2011}\cite{mckinney_data_2010} are leveraged
+dammit is written in Python and uses tools within the ecosystem. The first version was written using
+`pydoit` [@url:http://pydoit.org], with each step in the database preparation and annotation process decomposed
+into a `pydoit` task, allowing for easy dependency tracking and resume capability.
+Version 2 is a complete rewrite using Snakemake [@doi:https://doi.org/10.12688/f1000research.29032.1]; while the underlying
+pipeline remains mostly the same, the `pydoit` tasks have been converted into reusable Snakemake wrappers and the command line
+interface wraps the Snakemake CLI. Snakemake is widely used within the field and has a rapidly growing community.
+It also enables first-class support of High Performance Compute (HPC) system schedulers, 
+numpy and pandas \cite{van_der_walt_numpy_2011}\cite{mckinney_data_2010} are leveraged
 heavily for dealing with tabular data, both for ease of implementation and increased speed. A simple extension system
 allows developers to register new tasks with the core application and extend the pipeline. Configuration is handled through
 a JSON file. Each stage of the annotation pipeline outputs both its own format (for example, MAF for LAST) and 
