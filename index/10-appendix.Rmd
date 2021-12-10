@@ -29,6 +29,21 @@ The library is organized into namespaces by purpose.
 
 $k$-mer hashing is a core bottleneck in de Bruijn graph construction, as well as many sketching algorithms.
 Because of the centrality of hashing, many of `goetia`'s classes are parameterized by hashing method.
+Hashing capability is modularized; the basic interfaces simply accept $k$-mer sequences and produce integers, and additional, more advanced interfaces support efficient rolling hashing and neighbor-searching.
+
+#### Hash types
+
+The types of hash values are templated to allow composability and flexibility.
+The core type is `Hash`, which is parametrized with a `value_type` for the underlying integer to be used.
+Casting to `value_type` or calling `value()` on a `Hash` object will return the underlying integer.
+Generally, this is assumed to be `uint64_t`, which is the default, but larger (or smaller) integers can be substituted.
+Next is type `Canonical`, which like `Hash` takes a `value_type`, but actually stores two values: the forward and reverse-complement hash values.
+When a `Canonical` is cast to `value_type` or hash its `value()` method called, it returns to smaller of its forward and reverse-complment hash values.
+
+Building on the two foundational hash types is `Kmer`.
+This is parameterized by a hash type corresponding to the interface of `Hash`, and stores a `std::string` corresponding to the $k$-mer associated with the hash value.
+Related is the `Shift`: this also takes a hash type template parameter, as well as a non-type parameter of type `bool` for its direction.
+A shift stores a hash value and a single `char` symbol representing the single base from the dBG alphabet $\Sigma$ that was added to the $k-1$ suffix (or prefix) of the `Shift`'s predecessor.
 
 ### `goetia::storage`
 
