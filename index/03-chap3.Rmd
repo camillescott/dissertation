@@ -3,20 +3,19 @@
 # installed and loaded. This huskydown package includes
 # the template files for the thesis and also two functions
 # used for labeling and referencing
-if(!require(devtools))
+if (!require(devtools))
   install.packages("devtools", repos = "http://cran.rstudio.com")
-if(!require(dplyr))
+if (!require(dplyr))
     install.packages("dplyr", repos = "http://cran.rstudio.com")
-if(!require(ggplot2))
+if (!require(ggplot2))
     install.packages("ggplot2", repos = "http://cran.rstudio.com")
-if(!require(ggplot2))
+if (!require(ggplot2))
     install.packages("bookdown", repos = "http://cran.rstudio.com")
-if(!require(aggiedown)){
+if (!require(aggiedown)) {
   library(devtools)
   devtools::install_github("rapeek/aggiedown")
   }
 library(aggiedown)
-flights <- read.csv("data/flights.csv")
 ```
 
 
@@ -37,45 +36,40 @@ dammit also exposes a suite of simple command line tools for file formation conv
 
 ## Introduction
 
-RNA-seq has become an important tool for genomics. de novo assemblies of RNA-seq data
-provide a useful resource for researchers attempting to characterize the gene content of an organism, especially in non-model
-systems \cite{garber_computational_2011}. Importantly, due to its cost-effectiveness, transcriptome assembly is an accessible 
-option for labs with limited resources wishing to start using sequencing technology. Many uses for transcriptomes require a usable annotation, and annotators
-often make for complex and unwieldy software. Due to their tendency to rely on a variety of third-party software and 
-databases, they can be difficult to install and configure, especially for those with limited bioinformatics expertise. To make matters worse, many annotators trade performance for familiarity in their supporting software (eg. BLAST).
+RNA-seq is now a foundational tool for genomics.
+Reference-based RNA-seq enables researchers to characterize gene expression levels under differing conditions, while de novo assemblies of RNA-seq data provide a useful resource for researchers attempting to characterize the gene content of an organism, especially in non-model systems [@garber_computational_2011].
+Importantly, due to its cost-effectiveness, transcriptome assembly is an accessible option for labs with limited resources; whereas a complete de novo genome assembly requires high coverage and often long reads to properly characterize genic content, a transcriptome assembly is often sufficient to discover expressed transcripts of interest.
+Annotation is generally the first step downstream of assembly, and annotators often make for complex and unwieldy software.
+Due to their tendency to rely on a variety of third-party software and databases, they can be difficult to install and configure, especially for those with limited bioinformatics expertise.
+To make matters worse, many annotators trade performance for familiarity in their supporting software; for example, while many aspiring bioinformaticians may be familiar with BLAST [@altschul_basic_1990], its relatively lackluster performance when comparing many transcripts to a large reference database can be a burden to labs with limited computational resources. 
 
-dammit addresses these issues by fully embracing a super rad philosophy of openness. I extend the traditional philosophy of
-openness to encompass the \textit{accessibility} and
-\textit{availability} of a piece of software and its required third-party tools: software with a cumbersome installation process 
-or unstable hosting is no more open than a proprietary counterpart. Further, accessible software should be able to be run 
-outside the confines of a supercomputing cluster in a reasonable time frame.
-
-There are several other annotators targeted at transcriptomes that do not fulfill these requirements. The Broad Institutes's Trinotate fulfills a similar
-niche, but relies on the familiar but slow BLAST+ \cite{altschul_basic_1990} and the cumbersome rnammer \cite{lagesen_rnammer:_2007} 
-while embracing a protocol format over automation. FastAnnotator \cite{chen_fastannotator--efficient_2012} tries to alleviate
-the accessibility issue with a web-based approach, which trades difficult installation for the uncertainty of maintaining and funding web services. 
-dammit provides a solution for users wanting local installation, good performance, and ease-of-use.
+dammit addresses these issues by fully embracing a philosophy of openness and accessibility.
+The authors contend that truly open scientific software must also maximize *accessibility* and *availability*: tools with cumbersome installation processes, cloud-based solutions that rely on stable centralized hosting, and tools that only run on a limited selection of operating systems and hardware are compromised in their support of open science.
+Hence, we rely on performant, well-tested open source third-party tools; implement our core software in a well supported language environment; and use the stable, easily accessible `conda` ecosystem for distribution. 
+dammit provides a solution for users wanting automated local installation, good performance, and ease-of-use.
 
 ## Methods
 
 ### Implementation
 
-dammit is written in Python and uses tools within the ecosystem. The first version was written using
-`pydoit` [@url:http://pydoit.org], with each step in the database preparation and annotation process decomposed
-into a `pydoit` task, allowing for easy dependency tracking and resume capability.
-Version 2 is a complete rewrite using Snakemake [@doi:https://doi.org/10.12688/f1000research.29032.1]; while the underlying
-pipeline remains mostly the same, the `pydoit` tasks have been converted into reusable Snakemake wrappers and the command line
-interface wraps the Snakemake CLI. Snakemake is widely used within the field and has a rapidly growing community.
-It also enables first-class support of High Performance Compute (HPC) system schedulers, 
-numpy and pandas \cite{van_der_walt_numpy_2011}\cite{mckinney_data_2010} are leveraged
-heavily for dealing with tabular data, both for ease of implementation and increased speed. A simple extension system
-allows developers to register new tasks with the core application and extend the pipeline. Configuration is handled through
-a JSON file. Each stage of the annotation pipeline outputs both its own format (for example, MAF for LAST) and 
-a more easily parsed CSV version.
+dammit is written in Python and uses tools within the ecosystem.
+The first version was written using `pydoit` [@url:http://pydoit.org], with each step in the database preparation and annotation process decomposed into a `pydoit` task, allowing for easy dependency tracking and resume capability.
+Version 2 is a complete rewrite using Snakemake [@doi:https://doi.org/10.12688/f1000research.29032.1]; while the underlying pipeline remains mostly the same, the `pydoit` tasks have been converted into reusable Snakemake wrappers and the command line interface (CLI) wraps the Snakemake CLI.
+Snakemake is widely used within the field and has a rapidly growing community.
+Furthermore, it enables first-class support of High Performance Compute (HPC) system schedulers, a collection of reusable wrappers to make tasks portable, and automated per-task environment management.
 
-All documentation is written in reStructuredText and managed with Sphinx. Documentation is hosted on a github
-pages site at \href{http://www.camillescott.org/dammit}{camillescott.org/dammit} and mirrored at 
-\href{http://dammit.readthedocs.org}{dammit.readthedocs.org}.
+The dammit CLI exposes a number of subcommands.
+The core `run` subcommand wraps Snakemake and executes the pipeline which is defined in the associated snakefiles.
+A `config` subcommand allows reporting and editing configuration options globally and per-project; all configuration is done through standard YAML files, with global configuration and temporary storage adhering to the XDG Base Directory Specification [@url:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html].
+The remaining subcommands implement various format parsing and transformation, filtering, and statistical functions, which are then leveraged in the Snakemake pipeline.
+For example, `dammit rename-fasta` parses an input FASTA file and renames the headers in a standardized format, optionally with a user-supplied regular expression; this subcommand is also the first task run by the annotation pipeline.
+This allows users to make use of the internal `dammit` tooling independently of annotation.
+
+File parsing is implemented in the companion library `ope` [@url:https://github.com/camillescott/ope].
+This library provides parsing support for GFF3, HMMER and Infernal tabular output, MAF, and TransDecoder FASTA, returning the parsed data in `pandas` DataFrames [@mckinney_data_2010] for use within the Python data science ecosystem.
+`dammit` provides converters to output the corresponding DataFrames as GFF3.
+
+All documentation is written in Markdown and managed with MkDocs. Documentation can be accessed at the dammit Github Pages site [@url:http://dib-lab.github.io/dammit/].
 
 ### Operation
 
