@@ -2,6 +2,9 @@ name: CI
 
 on: [push]
 
+env:
+  CACHE_NUMBER: 0  # increase to reset cache manually
+
 jobs:
   build:
 
@@ -28,6 +31,7 @@ jobs:
           miniforge-version: latest
           activate-environment: dissertation
           use-mamba: true
+          auto-activate-base: false
 
     - name: Cache main conda environment
       uses: actions/cache@v2
