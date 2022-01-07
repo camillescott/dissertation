@@ -25,7 +25,7 @@ rule build_thesis:
                         '03-chap3',
                         '04-shmlast',
                         '05-suchtree',
-                        '06-workflows',
+                        #'06-workflows',
                         '09-conclusion',
                         '10-appendix',
                         '98-colophon',
