@@ -48,10 +48,11 @@ jobs:
       uses: actions/cache@v2
       with:
         path: .snakemake/conda
-        key: ${{ matrix.label }}-snakemake-conda-$${{ hashFiles('envs/R.yml') }}-${{ env.CACHE_NUMBER }}
+        key: ${{ matrix.label }}-snakemake-conda-${{ hashFiles('envs/R.yml') }}-${{ env.CACHE_NUMBER }}
 
     - name: Install aggiedown in R environment
-      run: snakemake -j 1 --use-conda --conda-frontend mamba install_deps
+      run: |
+        conda activate dissertation && snakemake -j 1 --use-conda --conda-frontend mamba install_deps
       env:
         GITHUB_PAT: ${{ secrets.ACCESS_TOKEN }}
 
@@ -63,8 +64,8 @@ jobs:
         key: ${{ matrix.label }}-manubot-${{ hashFiles('index/_book/cache/references-cache.json') }}-${{ env.CACHE_NUMBER }}
 
     - name: Run pipeline
-      run: snakemake -j 1 --use-conda --conda-frontend mamba
-
+      run: |
+        conda activate dissertation && snakemake -j 1 --use-conda --conda-frontend mamba
     - name: upload PDF to GH artifacts
       uses: actions/upload-artifact@v1
       with:
