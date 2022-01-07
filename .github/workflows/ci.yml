@@ -52,7 +52,9 @@ jobs:
 
     - name: Install aggiedown in R environment
       run: |
-        conda activate dissertation && snakemake -j 1 --use-conda --conda-frontend mamba install_deps
+        export PATH="/usr/share/miniconda3/bin:$PATH"
+        source activate dissertation
+        snakemake -j 1 --use-conda --conda-frontend mamba install_deps
       env:
         GITHUB_PAT: ${{ secrets.ACCESS_TOKEN }}
 
@@ -65,7 +67,9 @@ jobs:
 
     - name: Run pipeline
       run: |
-        conda activate dissertation && snakemake -j 1 --use-conda --conda-frontend mamba
+        export PATH="/usr/share/miniconda3/bin:$PATH"
+        source activate dissertation
+        snakemake -j 1 --use-conda --conda-frontend mamba
     - name: upload PDF to GH artifacts
       uses: actions/upload-artifact@v1
       with:
