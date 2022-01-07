@@ -23,6 +23,11 @@ library(aggiedown)
 
 \chaptermark {dammit annotator}
 
+## Chapter Summary
+
+
+
+
 ## Abstract
 
 dammit is a automated de novo transcriptome annotation pipeline designed with the express purpose of being easy to install and configure.
@@ -66,7 +71,7 @@ For example, `dammit rename-fasta` parses an input FASTA file and renames the he
 This allows users to make use of the internal `dammit` tooling independently of annotation.
 
 File parsing is implemented in the companion library `ope` [@url:https://github.com/camillescott/ope].
-This library provides parsing support for GFF3, HMMER and Infernal tabular output, MAF, and TransDecoder FASTA, returning the parsed data in `pandas` DataFrames [@mckinney_data_2010] for use within the Python data science ecosystem.
+This library provides parsing support for GFF3, HMMER and Infernal tabular output, MAF, and TransDecoder FASTA, returning the parsed data in `pandas` DataFrames [@doi:10.5281/zenodo.3509134; @doi:10.25080/Majora-92bf1922-00a] for use within the Python data science ecosystem.
 `dammit` provides converters to output the corresponding DataFrames as GFF3.
 
 All documentation is written in Markdown and managed with MkDocs. Documentation can be accessed at the dammit Github Pages site [@url:http://dib-lab.github.io/dammit/].
