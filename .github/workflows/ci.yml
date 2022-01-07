@@ -9,12 +9,16 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+
     - name: install xelatex
       run: sudo apt install -y texlive-xetex texlive-science
+
     - name: Update conda
       run: conda update -q conda
+
     - name: Install conda dependencies
       run: conda env create --force --file environment.yml
+
     - name: Install aggiedown in R environment
       run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
@@ -22,16 +26,26 @@ jobs:
           snakemake -j 1 --use-conda --conda-frontend mamba install_deps
       env:
         GITHUB_PAT: ${{ secrets.ACCESS_TOKEN }}
+
+    - name: Cache manubot citeproc requests
+      uses: actions/cache@v2
+      with:
+        path: |
+          index/_book/cache/requests-cache.sqlite
+        key: ${{ hashFiles('index/_book/cache/references-cache.json') }}
+
     - name: Run pipeline
       run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
           source activate dissertation
           snakemake -j 1 --use-conda --conda-frontend mamba
+
     - name: upload PDF to GH artifacts
       uses: actions/upload-artifact@v1
       with:
         name: dissertation.pdf
         path: index/_book/dissertation.pdf
+
     - name: Release
       uses: fnkr/github-action-ghr@v1
       if: startsWith(github.ref, 'refs/tags/')
