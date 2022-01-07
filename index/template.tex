@@ -51,6 +51,11 @@ $endif$
 \usepackage{longtable}
 \usepackage{titlesec}
 
+\usepackage{fix-cm}
+\newcommand{\size}[2]{{\fontsize{#1}{0}\selectfont#2}}
+\newenvironment{sizepar}[2]
+ {\par\fontsize{#1}{#2}\selectfont}
+ {\par}
 
 \usepackage[nostamp]{draftwatermark}
 % % Use the following to make modification
