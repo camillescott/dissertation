@@ -265,6 +265,9 @@ Because
 
 Explore assembly graph statistics for txomes, genomes, and metagenomes. Idea is to briefly describe general trends in assembly graph growth for different data types. This also illustrates that the approach can scale.
 
+Iterative construction of the cDBG intuitively enables iterative analysis of the graph.
+
+
 
 ### Compaction can be included in Low Overhead Pipelines{#cdbg-pipelines}
 

@@ -20,13 +20,19 @@ library(aggiedown)
 
 
 # dammit 2.0: an open, accessible transcriptome annotator
-
 \chaptermark {dammit annotator}
 
-## Chapter Summary
+\begin{sizepar}{16}{24}
+\begin{description}
 
+\item[Chapter Authors]
+Camille Scott and N. Tessa Pierce
 
+\item[DOI]
+\url{https://doi.org}
 
+\end{description}
+\end{sizepar}
 
 ## Abstract
 
@@ -59,7 +65,7 @@ dammit provides a solution for users wanting automated local installation, good 
 
 dammit is written in Python and uses tools within the ecosystem.
 The first version was written using `pydoit` [@url:http://pydoit.org], with each step in the database preparation and annotation process decomposed into a `pydoit` task, allowing for easy dependency tracking and resume capability.
-Version 2 is a complete rewrite using Snakemake [@doi:https://doi.org/10.12688/f1000research.29032.1]; while the underlying pipeline remains mostly the same, the `pydoit` tasks have been converted into reusable Snakemake wrappers and the command line interface (CLI) wraps the Snakemake CLI.
+Version 2 is a complete rewrite using Snakemake [@doi:10.12688/f1000research.29032.1]; while the underlying pipeline remains mostly the same, the `pydoit` tasks have been converted into reusable Snakemake wrappers and the command line interface (CLI) wraps the Snakemake CLI.
 Snakemake is widely used within the field and has a rapidly growing community.
 Furthermore, it enables first-class support of High Performance Compute (HPC) system schedulers, a collection of reusable wrappers to make tasks portable, and automated per-task environment management.
 
@@ -74,14 +80,12 @@ File parsing is implemented in the companion library `ope` [@url:https://github.
 This library provides parsing support for GFF3, HMMER and Infernal tabular output, MAF, and TransDecoder FASTA, returning the parsed data in `pandas` DataFrames [@doi:10.5281/zenodo.3715232; @doi:10.25080/Majora-92bf1922-00a] for use within the Python data science ecosystem.
 `dammit` provides converters to output the corresponding DataFrames as GFF3.
 
+dammit is primarily developed and tested on 64-bit Linux and distributed via conda.
+We currently require a minimum of Python 3.7.
+
 All documentation is written in Markdown and managed with MkDocs. Documentation can be accessed at the dammit Github Pages site [@url:http://dib-lab.github.io/dammit/].
 
 ### Operation
-
-dammit is developed and tested on both 64-bit Linux and Mac OSX. Acceptance tests are run on
-Ubuntu 14.04, and official installation instructions are provided for Ubuntu with Python 2.7 and
-3.5. Anaconda is the recommended Python distribution, but system Python installations are also
-usable.
 
 The program is divided into three main modules: \texttt{dammit dependencies}, which checks
 that all third-party dependencies are satisfied; \texttt{dammit databases}, which checks whether

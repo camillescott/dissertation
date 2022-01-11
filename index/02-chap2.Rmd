@@ -3,4 +3,12 @@
 <!-- This adds a different "short title" -->
 \chaptermark {Signature Saturation}
 
+Streaming de Bruijn graph compaction opens new avenues for exploring assembly graph architecture. 
+In particular, we can directly explore architecture as a function of coverage by tracking changes to the graph over time.
+However, many metrics 
+
+
+
+### The Draff Sketch
+
 

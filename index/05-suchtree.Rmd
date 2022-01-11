@@ -1,6 +1,19 @@
 # SuchTree: Fast, thread-safe computations with phylogenetic trees {#ref-suchtree}
-
 \chaptermark {SuchTree}
+
+\begin{sizepar}{16}{24}
+\begin{description}
+
+\item[Chapter Authors]
+Russell Y. Neches and Camille Scott
+
+\item[DOI]
+\url{https://doi.org/10.21105/joss.00678}
+
+\end{description}
+\end{sizepar}
+
+
 
 ## Summary
 

@@ -122,5 +122,3 @@ Both these advantages necessitate locality-sensitive partitioning methods such a
 ### `goetia::sketches`
 
 ### `goetia::`: General Utilities
-
-# The Second Appendix, for Fun
