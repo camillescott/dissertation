@@ -1,0 +1,21 @@
+# cluster_config.yml - cluster configuration
+__default__:
+    account: ctbrowngrp
+    partition: bmm
+    mail-type: FAIL,TIME_LIMIT
+    mail-user: camille.slurm@bogg.cc
+    time: 360
+    mem: 4000
+    nodes: 1
+    ntasks-per-node: 16
+    job-name: '{output}'
+    chdir: '/home/camw/streaming-sketching/workflow'
+    logdir: '/home/camw/streaming-sketching/workflow/logs/'
+
+download_runs:
+    job-name: 'download.{wildcards.filename}'
+    logdir: '/home/camw/streaming-sketching/workflow/logs/{wildcards.sample_accession}/'
+
+distances:
+    job-name: 'distances.{wildcards.sample_accession}.{wildcards.consumer}'
+    logdir: '/home/camw/streaming-sketching/workflow/logs/{wildcards.sample_accession}/'

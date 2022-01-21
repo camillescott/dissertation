@@ -15,3 +15,6 @@ dependencies:
   - sourmash
   - jupyterlab
   - nb_conda_kernels
+  - pip
+  - pip:
+    - taxonomy

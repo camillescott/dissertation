@@ -1,0 +1,36 @@
+# This file should contain everything to configure the workflow on a global scale.
+# In case of sample based data, it should be complemented by a samples.tsv file that contains
+# one row per sample. It can be parsed easily via pandas.
+#
+n_genomes: 5
+n_txomes: 5
+n_metagenomes: 5
+
+ena_query: >-
+    ((library_source="TRANSCRIPTOMIC" AND
+    library_strategy="RNA-Seq")
+    OR 
+    (library_source="GENOMIC" AND 
+    library_strategy="WGS")
+    OR
+    (library_source="METAGENOMIC")) AND
+    library_layout="PAIRED" AND 
+    instrument_platform="ILLUMINA" AND 
+    instrument_model!="Illumina Genome Analyzer" AND instrument_model!="Illumina Genome Analyzer II" AND instrument_model!="Illumina Genome Analyzer IIx" AND 
+    first_created < 2020-03-25
+
+
+group_subsample_size: 10
+random_seed: 42
+
+K: 31
+minhash_size: 25000
+minhash_scaled: 5000
+sketch_distance_interval: 500000
+solid_min_count: 1.0
+solid_min_proportion: .75
+diginorm_coverage:
+    - 2
+    - 5
+    - 10
+    - 20

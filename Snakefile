@@ -1,5 +1,7 @@
 import platform
 
+configfile: "config/config.yaml"
+
 rule all:
   input: 'index/_book/dissertation.pdf'
 
