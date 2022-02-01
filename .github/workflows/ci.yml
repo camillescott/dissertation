@@ -65,7 +65,7 @@ jobs:
         source activate dissertation
         snakemake -j 1 --use-conda --conda-frontend mamba install_deps
       env:
-        GITHUB_PAT: ${{ secrets.ACCESS_TOKEN }}
+        GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Cache manubot citeproc requests
       uses: actions/cache@v2
