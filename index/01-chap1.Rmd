@@ -76,7 +76,7 @@ A unitig node with no neighboring decision nodes is an $island$; a unitig node w
 As with the de Bruijn graph, we refer to the cDBG at time $t$ as $C_k[t]$.
 
 
-## Methods {#cdbg-methods}
+## Methods {#chap1-methods}
 
 Broadly, the underlying de Bruijn graph is implemented as a simple set. Sequences are broken down into constituent $k$-mers and hashed, and if a sequence contains any $k$-mers not previously observed, the cDBG is updated from the sequence. 
 
@@ -84,28 +84,28 @@ Broadly, the underlying de Bruijn graph is implemented as a simple set. Sequence
 
 The next sections describe the compaction process and implementation in detail.
 
-### Construction of the de Bruijn Graph}{#cdbg-methods-construction}
+### Construction of the de Bruijn Graph
 
 The de Bruijn graph is implemented as a simple set of $k$-mers.
 As such, it can be updated in a streaming fashion with no additional methods: a new sequence $s_t$ from $SS$ is broken down into its constituent $k$-mers and hashed using a rolling hash scheme [@lemire2010recursive], with new $k$-mers being added to the set and existing $k$-mers being incremented if a counting data structure is in use.
-The node-centric model saves memory at the cost of requiring a seed sequence to begin traversal.
+The node-centric model saves memory by eliding edge storage at the cost of requiring a seed sequence to begin traversal.
 
 While the implementation supports several probabilistic data structures taken from the 
 \texttt{khmer} [@crusoe2015khmer; @pell_scaling_2012] package, the reference implementation uses an exact
-hash set provided by the Sparsepp library (github.com/greg7mdp/sparsepp), which is based on Google's sparsehash. 
-This limits the practical application to moderately-sized assembly graphs dude to memory overhead.
+hash set provided by the `parallel-hashmap` library [@url:https://github.com/greg7mdp/parallel-hashmap]. 
+This limits the practical application to moderately-sized assembly graphs due to memory overhead.
 
-### cDBG Data Structure {#cdbg-data-structure}
+### cDBG Data Structure 
 
 The cDBG data structure consists of two maps: first, a basic hash table of known decision nodes $N_d$, and a map from $k$-mer hashes of the ends of unitig paths to the unitig nodes $U$. These two structures are sufficient to define the entire cDBG: neighbors of decision nodes are necessarily tips in $U$, and island unitigs can be discovered from their tips. However, in order to split existing unitigs, potentially long traversals would need to be made from induced decision $k$-mers to unitig ends; as such, we store an auxiliary map $T$ from the minimizers of the unitig paths to the unitigs. This sets the maximum traversal distance from an induced decision $k$-mer to find the unitig containing it to the window size $w$ of the minimizer.
 
-### Mutations to the cDBG{#cdbg-mutations}
+### Mutations to the cDBG
 
 The streaming compact de Bruijn graph can be defined by its decision $k$-mers and the $k$-mers terminating its current unitigs. While unitigs are subject to mutation throughout streaming construction (splitting and merging), decision nodes within the cDBG are never deleted once created, a property which can be exploited for construction (CTB: during graph construction?).
 
 In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in $G_{t-1}$; that is, a $k$-mer first introduced in fragment $t$. A *new decision $k$-mer* is a new $k$-mer which is also a decision $k$-mer. An *induced decision $k$-mer* is a decision $k$-mer which is not new, but became a decision $k$-mer at time $t$. A *new unitig node* is a unitig comprising only new $k$-mers. An existing unitig node is *split* when one its $k$-mers becomes an induced decision $k$-mer, and two unitig nodes are merged when a path of new $k$-mers exists between two of their tip $k$-mers. Given a sequence $s_t \in SS$, the *segments* of $s_t$ are the paths of new $k$-mers in $s_t$, terminated at existing $k$-mers and new decision $k$-mers. Now, we will define the ways in which a segment can mutate the cDBG.
 
-#### Inserting New Sequences and Finding New Segments{#cdbg-insertion}
+#### Inserting New Sequences and Finding New Segments
 
 The first step to updating the cDBG with a new sequence is to insert its $k$-mers into the dBG and divide its new $k$-mers into their constituent segments. Once we have the segments, we use them to update the state of the cDBG. \ref{FindSegments} describes this procedure: segment paths are split on existing $k$-mers and new decision $k$-mers.
 
@@ -203,14 +203,14 @@ If neither end of the segment matches to an existing unitig, we produce a new is
 \caption{InsertSegment}\label{InsertSegment}
 \end{algorithm}
 
-#### Splitting Existing Unitigs from Induced Decision $k$-mers}{#cdbgsplitting}
+#### Splitting Existing Unitigs from Induced Decision $k$-mers
 
 Splitting an existing unitig is the most costly and common operation. When an existing $k$-mer $\mu$ is induced as
 a decision $k$-mer, we must traverse into the dBG until finding a hash which links to the unitig in the cDBG. If the induced
 decision $k$-mer is a tip, we will discover the unitig immediately: this is an edge case we refer to as clipping, in which the unitig is shortened and its tip reindexed. Otherwise, $\mu$ has exactly two neighbors which are not new from which we can traverse into the existing unitig. We traverse through unitig $k$-mers until stopping at either a tip or an element of $T$, checking the index
 as we go. The discovered unitig is then split according the to the induced decision $k$-mer.
 
-#### Correctness{#cdbg-correctness}
+#### Correctness
 
 \begin{lemma}[inducers-lemma]
 	\label{inducers-lemma}
@@ -241,23 +241,28 @@ as we go. The discovered unitig is then split according the to the induced decis
 	\caption{\label{fig:disturbed-dnodes}Caption describing decision nodes, references algorithm.}
 \end{figure}
 
-## Results{#cdbg-results}
+## Results {#chap1-results}
 
-### Implementation: the \texttt{goetia} library and tools{#cdbg-implementation}
+### Implementation: the \texttt{goetia} library and tools {#chap1-results-implementation}
 
 The streaming compactor is implemented in the `goetia` [@url:https://github.com/camillescott/goetia] package, which is hosted on GitHub and available under the MIT license.
 It includes implementations of several exact and probabilistic $k$-mer sets and counters, pluggable hashing methods for those counters, de Bruijn graph implementations built on top of those counters, streaming file processing and parsing utilities, and the core streaming compaction implementation.
-This functionality is implemented as a C++ library, which can be installed and linked against as a shared library via `bioconda` [@doi:10.1038/s41592-018-0046-7]. High-performance Python bindings are provided using `cppyy` [@doi:10.1109/PyHPC.2016.008], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
+This functionality is implemented as a C++ library, which can be installed and linked against as a shared library via `bioconda` [@doi:10.1038/s41592-018-0046-7].
+High-performance Python bindings are provided using `cppyy` [@doi:10.1109/PyHPC.2016.008], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
+Unit tests are performed using a library of pytest fixtures called the `debruijnal-enhance-o-tron` [@url:https://github.com/camillescott/debruijnal-enhance-o-tron].
+These fixtures randomly generate common assembly graph features parameterized by K, sequence lengths, and other constraints, allowing us to unit test compaction correctness in a manner similar to fuzzing.
+The dBG generators in the debruijnal-enhance-o-tron are implemented as an interface over a user-supplied dBG implementation, which means they bootstrap correctness-checking of the basic dBG and storage implementations as well.
 
-### The cDBG can be constructed as sequences are downloaded in real time{#cdbg-download-realtime}
+### The cDBG can be constructed as sequences are downloaded in real time
 
-Because 
+A key advantage of streaming methods is the ability to bypass writing the input data to disk.
+While streaming approaches are often more computationally complex than offline approaches, particularly when exact solutions are required, they can be valuable tools for pipeline construction when scaling is less of a concern, ie, for smaller data running on serverless architectures.
+Here, we show that our streaming compaction prototype functions at speeds practical for use as a prefilter for sequences directly downloaded from a remote source; that is, we can compact sequences at a rate comensurate with the speed of many sequence archives, with disk access only occurring when writing assembly graph metrics and saving the final resulting compact dBG.
 
-% Should we even do benchmarking? Goetia is slow compared to offline approaches, there's not getting around it.
 
 % Probably better to show a streaming result from a direct download. Can show disk access as well. Then things are framed as: goetia can build the graph as fast as a reasonable internet connection can download the sequences from a remote source.
 
-### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs{#cdbg-approaches}
+### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
 \begin{figure}
 	\centering
@@ -271,7 +276,7 @@ Iterative construction of the cDBG intuitively enables iterative analysis of the
 
 
 
-### Compaction can be included in Low Overhead Pipelines{#cdbg-pipelines}
+### Compaction can be included in Low Overhead Pipelines
 
 ## Conclusions{#cdbg-conclusions}
 
