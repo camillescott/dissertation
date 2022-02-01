@@ -1,0 +1,37 @@
+name: goetia-dev
+channels:
+    - bioconda
+    - conda-forge
+dependencies:
+    - boltons
+    - cppyy=1.6.2
+    - cmake
+    - ijson
+    - ninja
+    - pytest
+    - numpy
+    - scipy
+    - mashumaro
+    - pandas
+    - openmp
+    - blessings
+    - pytest-benchmark
+    - pyfiglet
+    - py-cpuinfo
+    - sourmash-minimal=3.4.0
+    - zlib
+    - curio
+    - clang
+    - clang-tools
+    - clangdev
+    - clangxx
+    - libcxx
+    - libclang
+    - libclang-cpp
+    - python-clang
+    - pip
+    - pip:
+      - plotille
+      - pytest-randomly
+      - git+https://github.com/camillescott/debruijnal-enhance-o-tron#egg=debruijnal_enhance_o_tron
+
