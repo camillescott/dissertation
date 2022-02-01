@@ -4,9 +4,9 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.7
-  - snakemake-minimal=5.20.1
-  - pandas=1.0.3
+  - python=3.8
+  - snakemake-minimal>=5.20.1
+  - pandas>=1.4
   - matplotlib-base
   - hvplot
   - scipy
@@ -15,6 +15,7 @@ dependencies:
   - sourmash
   - jupyterlab
   - nb_conda_kernels
+  - taxonomy
   - pip
   - pip:
-    - taxonomy
+    - cmdbench
