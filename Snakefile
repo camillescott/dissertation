@@ -40,3 +40,14 @@ rule build_thesis:
       mv _book/_main.pdf _book/dissertation.pdf
       cp _book/dissertation.pdf ../
   """
+
+
+rule install_goetia:
+  conda: 'envs/goetia.yml'
+  shell: '''
+      mkdir -p build
+      cd build
+      git clone git@github.com:camillescott/goetia.git || git -C goetia pull
+      cd goetia
+      make install
+  '''
