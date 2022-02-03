@@ -1,0 +1,12 @@
+\begin{algorithm}
+	\DontPrintSemicolon
+	\KwData{dBG $G_{k,t-1}$, cDBG $C(G_{k,t-1})$}
+	\KwIn{$k$-mer $u$ which can induce decision $k$-mers, set $\Delta$ of new $k$-mers to ignore }
+	\For{$v \in G.neighbors(u)$}{
+		\If{$v \notin \Delta$ and $IsDecision(v)$}{
+			$C.NewDecisionNode(v)$\;
+			$C.SplitUnitig(v)$\;
+		}
+	}
+\caption{InduceDecisionKmers}\label{InduceDecisionKmers}
+\end{algorithm}

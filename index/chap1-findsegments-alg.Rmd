@@ -1,0 +1,42 @@
+
+\begin{algorithm}[]
+	\DontPrintSemicolon
+	\KwData{dBG $G_{k,t-1}$, sequence stream $SS$}
+	\KwIn{sequence $s_t \in SS$ }
+	\KwResult{A list $\ell$ of new segments from $s_t$, set of new decision $k$-mers $\delta$}
+	$U \longleftarrow kmers(s_t)$\;
+	$P \longleftarrow \emptyset$\;
+	\For{$u \in U$}{
+		$P.append(G.query(u))$\;
+		$G.insert(u)$\;
+	}
+	$p \longleftarrow \bm{False}$\;
+	$v \longleftarrow U[0]$\;
+	$segment \longleftarrow \emptyset$\;
+	\For{$v \in U$, $q \in P$}{
+		\If{$q = \bm{True}$}{
+		
+			\If{$p \not= \bm{False}$}{
+				$segment \longleftarrow \{u\}$
+			}
+			\If{$G.lneighbors(v) > 1 \parallel G.rneighbors(v) > 1$}{
+				\If{$v \not= U[0]$}{
+					$\ell.append(segment)$
+				}
+				$segment \longleftarrow \{v\}$\;
+				$\delta.insert(v)$\;
+			}
+		}\ElseIf{$p = \bm{True}$}{
+			$\ell.append(segment)$\;
+			$segment \longleftarrow \emptyset$\;
+		}
+	
+		$u \longleftarrow v$\;
+		$p \longleftarrow q$\;
+	}
+	\If{$q = \bm{True}$}{
+		$\ell.append(segment)$
+	}
+	\Return{$\ell, \delta$}
+\caption{FindSegments\label{FindSegments}}
+\end{algorithm}

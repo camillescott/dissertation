@@ -105,135 +105,54 @@ The streaming compact de Bruijn graph can be defined by its decision $k$-mers an
 
 In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in $G_{t-1}$; that is, a $k$-mer first introduced in fragment $t$. A *new decision $k$-mer* is a new $k$-mer which is also a decision $k$-mer. An *induced decision $k$-mer* is a decision $k$-mer which is not new, but became a decision $k$-mer at time $t$. A *new unitig node* is a unitig comprising only new $k$-mers. An existing unitig node is *split* when one its $k$-mers becomes an induced decision $k$-mer, and two unitig nodes are merged when a path of new $k$-mers exists between two of their tip $k$-mers. Given a sequence $s_t \in SS$, the *segments* of $s_t$ are the paths of new $k$-mers in $s_t$, terminated at existing $k$-mers and new decision $k$-mers. Now, we will define the ways in which a segment can mutate the cDBG.
 
-#### Inserting New Sequences and Finding New Segments
+### Inserting New Sequences and Finding New Segments
 
 The first step to updating the cDBG with a new sequence is to insert its $k$-mers into the dBG and divide its new $k$-mers into their constituent segments. Once we have the segments, we use them to update the state of the cDBG. \ref{FindSegments} describes this procedure: segment paths are split on existing $k$-mers and new decision $k$-mers.
 
-\begin{algorithm}[]
-	\DontPrintSemicolon
-	\KwData{dBG $G_{k,t-1}$, sequence stream $SS$}
-	\KwIn{sequence $s_t \in SS$ }
-	\KwResult{A list $\ell$ of new segments from $s_t$, set of new decision $k$-mers $\delta$}
-	$U \longleftarrow kmers(s_t)$\;
-	$P \longleftarrow \emptyset$\;
-	\For{$u \in U$}{
-		$P.append(G.query(u))$\;
-		$G.insert(u)$\;
-	}
-	$p \longleftarrow \bm{False}$\;
-	$v \longleftarrow U[0]$\;
-	$segment \longleftarrow \emptyset$\;
-	\For{$v \in U$, $q \in P$}{
-		\If{$q = \bm{True}$}{
-		
-			\If{$p \not= \bm{False}$}{
-				$segment \longleftarrow \{u\}$
-			}
-			\If{$G.lneighbors(v) > 1 \parallel G.rneighbors(v) > 1$}{
-				\If{$v \not= U[0]$}{
-					$\ell.append(segment)$
-				}
-				$segment \longleftarrow \{v\}$\;
-				$\delta.insert(v)$\;
-			}
-		}\ElseIf{$p = \bm{True}$}{
-			$\ell.append(segment)$\;
-			$segment \longleftarrow \emptyset$\;
-		}
-	
-		$u \longleftarrow v$\;
-		$p \longleftarrow q$\;
-	}
-	\If{$q = \bm{True}$}{
-		$\ell.append(segment)$
-	}
-	\Return{$\ell, \delta$}
-\caption{FindSegments\label{FindSegments}}
-\end{algorithm}
+```{r echo=FALSE, results='asis'}
+res <- knitr::knit_child('chap1-findsegments-alg.Rmd', quiet=TRUE)
+cat(res, sep='\n')
+```
 
-Only the first and last $k$-mers in a segment, and new decision $k$-mers, are able to induce an existing $k$-mer to become a decision $k$-mer, and thereby potentially split an existing unitig. \ref{InduceDecisionKmers} lays out the procedure for handling these $k$-mersr; see \ref{inducers-lemma}.
+Only the first and last $k$-mers in a segment, and new decision $k$-mers, are able to induce an existing $k$-mer to become a decision $k$-mer, and thereby potentially split an existing unitig. \ref{InduceDecisionKmers} lays out the procedure for handling these $k$-mersr; see also \@ref(lem:inducers-lemma).
 
-\begin{algorithm}
-	\DontPrintSemicolon
-	\KwData{dBG $G_{k,t-1}$, cDBG $C(G_{k,t-1})$}
-	\KwIn{$k$-mer $u$ which can induce decision $k$-mers, set $\Delta$ of new $k$-mers to ignore }
-	\For{$v \in G.neighbors(u)$}{
-		\If{$v \notin \Delta$ and $IsDecision(v)$}{
-			$C.NewDecisionNode(v)$\;
-			$C.SplitUnitig(v)$\;
-		}
-	}
-\caption{InduceDecisionKmers}\label{InduceDecisionKmers}
-\end{algorithm}
+```{r child='chap1-induce-alg.Rmd'}
+```
 
-With this procedure defined, we are able to update the cDBG from the new segment. We attempt to induce decision $k$-mers from the first and last $k$-mers in the segment and split unitigs if necessary; if the first or last $k$-mer is not a new decision $k$-mer and does not match up to an existing unitig tip \ref{tip-corollary}, we search for induced decision $k$-mers only in the direction away from the segment.
+With this procedure defined, we are able to update the cDBG from the new segment. We attempt to induce decision $k$-mers from the first and last $k$-mers in the segment and split unitigs if necessary; if the first or last $k$-mer is not a new decision $k$-mer and does not match up to an existing unitig tip (\@ref(cor:tip-corollary)), we search for induced decision $k$-mers only in the direction away from the segment.
 If neither end of the segment matches to an existing unitig, we produce a new island unitig with just the segment. The full procedure is detailed in \ref{InsertSegment}.
 
-\begin{algorithm}
-	\DontPrintSemicolon
-	\KwData{dBG $G_{k,t-1}$, cDBG $C(G_{k,t-1})$}
-	\KwIn{list of $k$-mers comprising $segment$ from $s_t \in SS$, 
-			 set of new decision $k$-mers $\delta$,
-		 	 set of all new $k$-mers $\Delta$}
-	 
-	 $l, r \longleftarrow \bm{True}$\;
-	\If{$segment.first \in \delta$}{
-		$C.NewDecisionNode(segment.first)$\;
-		$InduceDecisionKmers(segment.first, \Delta)$\;
-	} \ElseIf{$G.lneighbors(segment.first) \notin C.U$} {
-		$InduceLeftDecisionKmers(segment.first, \Delta)$
-	} \Else{
-		$l \longleftarrow \bm{False}$\;
-		$C.ExtendUnitig(G.lneighbors(segment.first), segment)$\;
-	}
+```{r child='chap1-insert-alg.Rmd'}
+```
 
-	\If{$segment.last \in \delta$}{
-		$C.NewDecisionNode(segment.last)$\;
-		$InduceDecisionKmers(segment.last, \Delta)$\;
-	} \ElseIf{$.rneighbors(segmen.last) \notin C.U$ } {
-		$InduceRightDecisionKmers(segment.last, \Delta)$
-	} \Else {
-	    $r \longleftarrow \bm{False}$\;
-		$C.ExtendUnitig(G.rneighbors(segment.last), segment)$\;
-	}
-
-	\If{$l = r = \bm{True}$}{
-		$C.NewUnitig(segment)$
-	}
-\caption{InsertSegment}\label{InsertSegment}
-\end{algorithm}
-
-#### Splitting Existing Unitigs from Induced Decision $k$-mers
+### Splitting Existing Unitigs from Induced Decision $k$-mers
 
 Splitting an existing unitig is the most costly and common operation. When an existing $k$-mer $\mu$ is induced as
 a decision $k$-mer, we must traverse into the dBG until finding a hash which links to the unitig in the cDBG. If the induced
 decision $k$-mer is a tip, we will discover the unitig immediately: this is an edge case we refer to as clipping, in which the unitig is shortened and its tip reindexed. Otherwise, $\mu$ has exactly two neighbors which are not new from which we can traverse into the existing unitig. We traverse through unitig $k$-mers until stopping at either a tip or an element of $T$, checking the index
 as we go. The discovered unitig is then split according the to the induced decision $k$-mer.
 
-#### Correctness
+### Correctness
 
-\begin{lemma}[inducers-lemma]
-	\label{inducers-lemma}
-	A decision $k$-mer can only be induced by a new decision $k$-mer in $s_t$ or the first or last $k$-mers in a new segment of $s_t$.
-\end{lemma}
+::: {.lemma #inducers-lemma name="Inducers' Lemma"}
+A decision $k$-mer can only be induced by a new decision $k$-mer in $s_t$ or the first or last $k$-mers in a new segment of $s_t$.
+:::
 
-```{proof}
-	Consider an existing non-decision $k$-mer $\mu \notin s_t$. An existing $k$-mer in $s_t$ cannot induce $\mu$ to be a decision $k$-mer: if so, $\mu$ would already be a decision $k$-mer. Now consider a new $k$-mer $\nu$ in the fragment which is not the first or last $k$-mer of a segment. In order for $\nu$ to induce $\mu$ to be a decision $k$-mer, $\mu$ must be a neighbor of $\nu$; because $\nu$ is not an end $k$-mer, it already has in-degree and out-degree at least one, from the new $k$-mers on either side of it. Now consider an end $k$-mer of a new segment: it has at least one new $k$-mer as its neighbor, and possibly an existing $k$-mer $\mu$ as its other neighbor. If $\mu$ is an in-neighbor of $\nu$, and already has out-degree of one, then $\nu$ can induce $\mu$ while being a non-decision $k$-mer; this exists for the case where $\mu$ is an out-neighbor as well.
-```
+::: {.proof}
+Consider an existing non-decision $k$-mer $\mu \notin s_t$. An existing $k$-mer in $s_t$ cannot induce $\mu$ to be a decision $k$-mer: if so, $\mu$ would already be a decision $k$-mer. Now consider a new $k$-mer $\nu$ in the fragment which is not the first or last $k$-mer of a segment. In order for $\nu$ to induce $\mu$ to be a decision $k$-mer, $\mu$ must be a neighbor of $\nu$; because $\nu$ is not an end $k$-mer, it already has in-degree and out-degree at least one, from the new $k$-mers on either side of it. Now consider an end $k$-mer of a new segment: it has at least one new $k$-mer as its neighbor, and possibly an existing $k$-mer $\mu$ as its other neighbor. If $\mu$ is an in-neighbor of $\nu$, and already has out-degree of one, then $\nu$ can induce $\mu$ while being a non-decision $k$-mer; this exists for the case where $\mu$ is an out-neighbor as well.
+:::
 
-\begin{lemma}[splitting-lemma]
-	\label{splitting-lemma}
-	An existing unitig node can only be split by an induced decision $k$-mer.
-\end{lemma}
+::: {.lemma #splitting-lemma name="Splitting Lemma"}
+An existing unitig node can only be split by an induced decision $k$-mer.
+:::
 
-```{proof}
-	An existing unitig is, by definition, composed of existing non-decision $k$-mers. A new $k$-mer cannot split an existing unitig, also by definition: if the $k$-mer were part of the unitig, it would not be new. Thus, in order to split a unitig, we must convert an existing $k$-mer into a decision $k$-mer. 
-```
+::: {.proof}
+An existing unitig is, by definition, composed of existing non-decision $k$-mers. A new $k$-mer cannot split an existing unitig, also by definition: if the $k$-mer were part of the unitig, it would not be new. Thus, in order to split a unitig, we must convert an existing $k$-mer into a decision $k$-mer. 
+:::
 
-\begin{corollary}
-	\label{tip-corollary}
-	If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a neighbor $\nu$ which is not a unitig tip, then $\nu$ must be an induced decision $k$-mer.
-\end{corollary}
+::: {.corollary #tip-corollary name="Tip Corollary"}
+If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a neighbor $\nu$ which is not a unitig tip, then $\nu$ must be an induced decision $k$-mer.
+:::
 
 \begin{figure}
 	\centering

@@ -1,0 +1,34 @@
+
+\begin{algorithm}
+	\DontPrintSemicolon
+	\KwData{dBG $G_{k,t-1}$, cDBG $C(G_{k,t-1})$}
+	\KwIn{list of $k$-mers comprising $segment$ from $s_t \in SS$, 
+			 set of new decision $k$-mers $\delta$,
+		 	 set of all new $k$-mers $\Delta$}
+	 
+	 $l, r \longleftarrow \bm{True}$\;
+	\If{$segment.first \in \delta$}{
+		$C.NewDecisionNode(segment.first)$\;
+		$InduceDecisionKmers(segment.first, \Delta)$\;
+	} \ElseIf{$G.lneighbors(segment.first) \notin C.U$} {
+		$InduceLeftDecisionKmers(segment.first, \Delta)$
+	} \Else{
+		$l \longleftarrow \bm{False}$\;
+		$C.ExtendUnitig(G.lneighbors(segment.first), segment)$\;
+	}
+
+	\If{$segment.last \in \delta$}{
+		$C.NewDecisionNode(segment.last)$\;
+		$InduceDecisionKmers(segment.last, \Delta)$\;
+	} \ElseIf{$.rneighbors(segmen.last) \notin C.U$ } {
+		$InduceRightDecisionKmers(segment.last, \Delta)$
+	} \Else {
+	    $r \longleftarrow \bm{False}$\;
+		$C.ExtendUnitig(G.rneighbors(segment.last), segment)$\;
+	}
+
+	\If{$l = r = \bm{True}$}{
+		$C.NewUnitig(segment)$
+	}
+\caption{InsertSegment}\label{InsertSegment}
+\end{algorithm}
