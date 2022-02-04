@@ -2,6 +2,20 @@
 
 \chaptermark{Streaming cDBG Construction}
 
+\begin{sizepar}{16}{24}
+\begin{description}
+
+\item[Chapter Authors]
+Camille Scott and C. Titus Brown
+
+\item[DOI]
+\url{}
+
+\end{description}
+\end{sizepar}
+
+
+
 ## Abstract
 
 Traditionally, approaches for sequence fragment analysis such as assembly have been off-line; assembly, in particular, has been a process in which all data is first loaded into memory (generally, a graph abstraction) before further processing to extract
@@ -69,7 +83,7 @@ Note that this implies that, while decision nodes may be neighbors, unitig nodes
 	\centering
 	\missingfigure[figwidth=\textwidth]{Paneled figure showing the raw de Bruijn graph structure, the cDBG structure, and the relationship between the two.}
 	\caption{\label{fig:cdbg-structure}a)  The underlying de Bruijn graph. Decision nodes are colored red. 
-		b) The \texttt{goetia} compact de Bruijn graph model. Decision nodes are shared with the underlying de Bruijng graph, and unitig nodes are mapped back to minimizers of their corresponding unitig paths. }
+		b) The \texttt{goetia} compact de Bruijn graph model. Decision nodes are shared with the underlying de Bruijn graph, and unitig nodes are mapped back to minimizers of their corresponding unitig paths. }
 \end{figure}
 
 A unitig node with no neighboring decision nodes is an $island$; a unitig node with decision nodes on either side is $full$; and a unitig node with a decision node on only one side is a $tip$. The edge-case where $\texttt{pre}(v) = \texttt{suf}(v)$ for a unitig $v$ is called a $circular$ unitig.
@@ -110,19 +124,19 @@ In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in 
 The first step to updating the cDBG with a new sequence is to insert its $k$-mers into the dBG and divide its new $k$-mers into their constituent segments. Once we have the segments, we use them to update the state of the cDBG. \ref{FindSegments} describes this procedure: segment paths are split on existing $k$-mers and new decision $k$-mers.
 
 ```{r echo=FALSE, results='asis'}
-res <- knitr::knit_child('chap1-findsegments-alg.Rmd', quiet=TRUE)
+res <- knitr::knit_child('algs/chap1-findsegments-alg.Rmd', quiet=TRUE)
 cat(res, sep='\n')
 ```
 
 Only the first and last $k$-mers in a segment, and new decision $k$-mers, are able to induce an existing $k$-mer to become a decision $k$-mer, and thereby potentially split an existing unitig. \ref{InduceDecisionKmers} lays out the procedure for handling these $k$-mersr; see also \@ref(lem:inducers-lemma).
 
-```{r child='chap1-induce-alg.Rmd'}
+```{r child='algs/chap1-induce-alg.Rmd'}
 ```
 
 With this procedure defined, we are able to update the cDBG from the new segment. We attempt to induce decision $k$-mers from the first and last $k$-mers in the segment and split unitigs if necessary; if the first or last $k$-mer is not a new decision $k$-mer and does not match up to an existing unitig tip (\@ref(cor:tip-corollary)), we search for induced decision $k$-mers only in the direction away from the segment.
 If neither end of the segment matches to an existing unitig, we produce a new island unitig with just the segment. The full procedure is detailed in \ref{InsertSegment}.
 
-```{r child='chap1-insert-alg.Rmd'}
+```{r child='algs/chap1-insert-alg.Rmd'}
 ```
 
 ### Splitting Existing Unitigs from Induced Decision $k$-mers
@@ -177,27 +191,53 @@ The dBG generators in the debruijnal-enhance-o-tron are implemented as an interf
 A key advantage of streaming methods is the ability to bypass writing the input data to disk.
 While streaming approaches are often more computationally complex than offline approaches, particularly when exact solutions are required, they can be valuable tools for pipeline construction when scaling is less of a concern, ie, for smaller data running on serverless architectures.
 Here, we show that our streaming compaction prototype functions at speeds practical for use as a prefilter for sequences directly downloaded from a remote source; that is, we can compact sequences at a rate comensurate with the speed of many sequence archives, with disk access only occurring when writing assembly graph metrics and saving the final resulting compact dBG.
+This prototype implementation struggles with memory scaling for large genomes, and as such, we have limited the input read data sets to samples with less than 100 million fragments.
 
 
-% Probably better to show a streaming result from a direct download. Can show disk access as well. Then things are framed as: goetia can build the graph as fast as a reasonable internet connection can download the sequences from a remote source.
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
-\begin{figure}
-	\centering
-	\missingfigure[figwidth=\textwidth]{Assembly graph growth on exemplar data.}
-	\caption{\label{fig:exemplars}A figure with unit-scaled growth for a transcriptome, a genome, and a metagenome; or possibly, average trendlines for a few of each. I think a better metric for global structure should be used here: either Laplacian spectrum, or graphlet kernel spectrum.}
-\end{figure}
 
-Explore assembly graph statistics for txomes, genomes, and metagenomes. Idea is to briefly describe general trends in assembly graph growth for different data types. This also illustrates that the approach can scale.
+Streaming construction of the cDBG intuitively enables dynamic analysis of the graph.
+Fig. \@ref(fig:fig-chap1-node-metrics) demonstrates this capability on several exemplar transcriptomes.
+The first metric of interest is the unique $k$-mer count over time: while *T weissflogii* and *A glacialis* both exhibit convexity followed by linear accumulation of unique $k$-mers, the higher-coverage *S cerevisiae* sample shows a more pronounced convexity before linearizing with a smaller slope.
+We expect to see this "saturation" behavior when most of the cDBG topology has been filled in: once the core structural $k$-mers have been observed, we mostly accumulate error [@brown_reference-free_2012].
+Our streaming approach provides more insight into this behavior.
+In particular, we can see the proportion of *island* unitigs be overtaken by tips.
+In samples with higher coverage or greater connectivity, tips and *full* unitigs make up increasing proportions of the cDBG.
 
-Iterative construction of the cDBG intuitively enables iterative analysis of the graph.
+```{r fig-chap1-node-metrics, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-node-metrics)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-node-metrics.png")
+```
 
+(ref:fig-chap1-node-metrics) **Dynamic metrics of the compact de Bruijn graph during construction.**
+cDBG metrics for transcriptomes of three eukaryotic microbes. The horizontal axis *t* is normalized sequence index within the sample; the vertical axis *p* is the proportion of the given type of cDBG node. See \@ref(chap1-background-definitions) for definitions of node types. *kmer_p* is the cumulative number of unique $k$-mers in the underlying dBG.
 
+Fig. \@ref(fig:fig-chap1-node-metrics) demonstrates streaming measurement of unitig fragmentation.
+As unitigs are created, split, or extended, a histogram of their lengths is updated.
+cDBGs with a large proportion of short unitigs are considered highly fragmented; this may be caused by low coverage, high error, or complex genome architecture.
+Fragmented assembly graphs will necessarily lead to fragmented assemblies downstream.
+Note that fragmentation corresponds with the graph topology from Fig. \@ref(fig:fig-chap1-node-metrics), with the *S. cerevisiae* cDBG less dominated by islands and tips showing less fragmentation.
+We also observe that this assembly graph shows the characteristic flattening behavior in its fragmentation curves, suggesting that this graph is sufficiently "saturated" and should produce better results downstream.
 
-### Compaction can be included in Low Overhead Pipelines
+```{r fig-chap1-unitig-frag, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-unitig-frag)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-unitig-frag.png")
+```
+
+(ref:fig-chap1-unitig-frag) **Changes in fragmentation as more sequences are observed.**
+Binned unitig lengths for the same three transcriptomes as fig. \@ref(fig:fig-chap1-node-metrics).
+
+### Streaming Compaction Can Participate in Pure-streaming Pipelines
+
+Another key advantage of streaming approaches is the ability to build analysis pipelines with minimal intermediate data.
+Aside from the size of the raw reads themselves, which can be considerable, many programs output hundreds of gigabytes of intermediate files, reducing the accessibility of those methods where storage space is at a premium.
+For some analyses, streaming construction of the cDBG can avoid storing the input reads entirely: reads can be streamed directly from the SRA or ENA to streaming-enable quality control software such as Trimmomatic [@doi:10.1093/bioinformatics/btu170] or FASTX [@url:http://hannonlab.cshl.edu/fastx_toolkit/] for trimming and filtering, optionally through a pre-filer such as digital normalization [@brown_reference-free_2012; @doi:10.1371/journal.pone.0101271], and then compacted.
+To support these workflows, `goetia` implements a set of streaming filters: currently, a solidity filter which passes through reads with a set proportion of their $k$-mers with counts over a solid threshold, and a reimplementation of digital normalization using our library's efficient sequence parsing and storage backends.
+
 
 ## Conclusions{#cdbg-conclusions}
+
+We introduce a novel streaming approach for the construction of the compact de Bruijn graph
 
 * Streaming algorithms are practically useful.
 * Streaming analysis of assembly graphs provides new insights into their structure.
