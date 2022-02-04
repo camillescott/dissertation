@@ -15,10 +15,9 @@ abstract: |
   "Frogs are great. Ribbit Ribbit."
 acknowledgments: |
   "The process of my PhD and the production of this thesis was a long a difficult process. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life."
-  Starting off in East Lansing, Michigan, at Michigan State University, 
 dedication: |
-  "*One thing to remember is to talk to the animals. If you do, they will talk back to you. But if you don’t talk to them, they won’t talk back to you, then you won’t understand. And when you don’t understand, you will fear, and when you fear, you will destroy the animals, and if you destroy the animals, you will destroy yourself*"    
-  (Chief Dan George, Tseil-Waututh Nation, North Vancouver)"
+  "*Someone once told me that time was a predator that stalked us all our lives. But I rather believe than time is a companion who goes with us on the journey, and reminds us to cherish every moment because they'll never come again. What we leave behind is not as important how we lived... after all, Number One, we're only mortal.*"    
+  (Captain Jean-Luc Picard, USS Enterprise (NCC-1701-D), United Federation of Planets)"
 # End of UCD thesis fields
 knit: "bookdown::render_book"
 site: bookdown::bookdown_site
