@@ -3,6 +3,20 @@
 <!-- This adds a different "short title" -->
 \chaptermark {Signature Saturation}
 
+\begin{sizepar}{16}{24}
+\begin{description}
+
+\item[Chapter Authors]
+Camille Scott and Luiz Irber
+
+\item[DOI]
+\url{}
+
+\end{description}
+\end{sizepar}
+
+## Introduction
+
 Streaming de Bruijn graph compaction opens new avenues for exploring assembly graph architecture. 
 In particular, we can directly explore architecture as a function of coverage by tracking changes to the graph over time.
 However, many metrics 
