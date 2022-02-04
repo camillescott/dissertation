@@ -11,15 +11,15 @@ The built PDF can be found by:
 
 Create the base conda environment:
 
-  mamba env create -f environment.yml
-  conda activate dissertation
+    mamba env create -f environment.yml
+    conda activate dissertation
   
 Install the `aggiedown` in the `R` rule environment:
 
-  snakemake -j 1 --use-conda --conda-frontend mamba install_deps
+    snakemake -j 1 --use-conda --conda-frontend mamba install_deps
   
 Build:
 
-  snakemake -j 1 --use-conda --conda-frontend mamba
+    snakemake -j 1 --use-conda --conda-frontend mamba
 
 The resulting PDF will be in `dissertation.pdf`. The first run will take much longer than subsequent builds while the conda environment is created and `manubot` builds its reference cache.
