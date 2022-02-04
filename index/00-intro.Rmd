@@ -24,10 +24,10 @@ library(knitr)
 * Overly-deep pipelines / intermediate data
 * Sea-change toward streaming methods due to nanopore
 
-Large-scale genome sequencing is one of the most paradigm-shifting technologies for biology of the 21st century.
-Since the sequencing of the human genome was declared complete in April of 2003, genomics has been a core part of the public
-conscience and rapidly grown as a tool for biological research.
+Large-scale genome sequencing is a paradigm-shifting technology for biology of the 21st century.
+Since the sequencing of the human genome was declared complete in April of 2003, genomics has been a core part of the public conscience and rapidly grown as a tool for biological research.
 What started as a small-scale molecular biology method for understanding individual genes grew into projects mapping out the genomes of all major model organisms in great functional detail, sequencing entire populations of microbes from the environment, mapping hundreds of thousands of individual human genomes, and producing draft sequences for hundreds of thousands of species across the entire tree of life; as of 2021, the National Center for Biotechnology Information (NCBI) stored over 36 petabytes of raw sequencing information in its Sequence Read Archive (SRA), with many times that volume not submitted.
+
 
 
 ## Background
@@ -37,48 +37,16 @@ What started as a small-scale molecular biology method for understanding individ
     * Long read tech: pacbio
     * Real-time sequencing: nanopore
 * Streaming Algorithms
-    * Definitions
-        * Offline algs
-        * semi-streaming algs
     * Advantages
         * Implied dynamic data structures
         * Disk space efficiency
         * Removal of intermediate output
         * Infinite-size data
         * Real-time analysis
-    * In \*omics
-        * Hardware level: ONT
-        * Abundance estimation
-        * Classification (signatures)
-        * k-mer cardinality
-        * k-mer statistics (kmerstream)
-        * assembly (semi-streaming)
-        * scaffolding
+
 * de Bruijn Graphs
-    * Motivation / Uses
-        * exact overlap detection
-        * assembly
-        * classification
-        * sequence comparison
-        * graph alignment
-    * Definitions
-        * k-mers
-        * node vs edge centric
-        * neighbor-finding
-        * bidirectional dBG
-        * traversal
     * Representations
         * Offline
-            * Suffix trees
-            * FM-index
-            * bitmaps
-            * BF + crit false positives
-            * cascading BF
-        * Streaming
-            * (exact) hash tables
-            * bloom filters
-            * count-min sketch
-            * quotient filter
     * Tagging / partitioning
         * Why
             * seeding for traversal
@@ -96,15 +64,6 @@ What started as a small-scale molecular biology method for understanding individ
     * Implementations: streaming
         * khmer/oxli
 * compact de Bruijn graphs
-    * Motivation
-        * Compressed dBG representation
-        * Preserve dBG properties: implicit edges
-    * Definitions:
-        * From "chunks" (OLC) to dBG models
-        * decision k-mers
-        * Unitigs
-        * Maximal unitigs
-        * Simpletigs
     * Implementations: offline
         * BCALM
         * TwoPaCo
@@ -164,7 +123,24 @@ Institutions with limited resources benefit greatly from reduced storage require
 Reduced data requirements may also translate to reduced network requirements, which helps with accessiblity in locations where network access is at a premium.
 Finally, streaming approaches often go hand-in-hand with sketching approaches, further reducing computational requirements and helping to bring omics analysis to individual users.
 
-### de Bruijn Graphs and Their Uses in Omics
+### Sequence Assembly: A Fundamental Problem in Genomics
+
+Assembly refers to the reconstruction of a set of hidden sequences $G_h$ from some set of fragments $R$ of length $L$ randomly sampled from $G_h$, with $G_h$ being the underlying genome or transcriptome of an organism (or organisms) being sequenced.
+The introduction of shotgun sequencing in 1979 [@simpson_theory_2015; @staden_strategy_1979] created a concrete need for algorithmic solutions to the assembly problem, the first complexity analysis of a simplified sequence assembly problem having already been carried out in 1978 [@maier_complexity_1978].
+The first simple genome assembler came later on in 1988, using a greedy overlap-layout-consensus (OLC) approach [@tarhio_greedy_1988].
+The simplest approach, which @maier_complexity_1978 described, is casting it as the NP-Complete shortest common supersequence (SCS) problem.
+This approach is inadequate for actual samples, as genomes are plagued by repetitive sequence:  tandem repeats (the same substring repeated back-to-back many times), interspersed repeats (from structures like transposable elements), and paralogs (genes which are repeated within a genome).
+Overlap detection is further complicated by error intrinsic to the sequencing process.
+Regardless of origin, these repeat classes all introduce a major challenge to assembly, and as pointed out in @simpson_theory_2015, break the SCS assumption of parsimony and drive the majority of work in the field.
+
+### de Bruijn Graphs, Assembly Graphs, and their Uses
+
+Although other approaches exist [@huang_cap3:_1999; @tarhio_greedy_1988], almost all modern assemblers rely on the assembly graph paradigm.
+Broadly, a graph is built with sequence fragments as the nodes and overlaps between them as the edges, and simplified to remove transitive redundancy.
+Appropriate traversals on this graph yield sequences from $G_h$ [@myers_toward_1995].
+The method of construction and structure further leads to two formulations of the assembly graph: the string graph [@myers_fragment_2005] and de Bruijn graph.
+While the string graph method is commonly used [@gonnella_readjoiner:_2012; @simpson_efficient_2012; @li_exploring_2012] and important, in this work I focus on the de Bruijn graph method; both methods are bounded by the same complexity constraints [@medvedev_computability_2007], though each has its own practical and theoretical
+advantages.
 
 A de Bruijn graph (dBG) $G(k, \Sigma)$ is a directed graph defined by its nodes, which are a set of fixed-length sequences of length $k$ over an alphabet $\Sigma$, and its edges, which exist when the sequences of a pair of nodes share a length $k-1$ suffix and prefix.
 These length-$k$ sequences are referred to as $k$-mers, and the terms nodes and $k$-mers may be used interchangeably.
