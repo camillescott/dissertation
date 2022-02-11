@@ -11,17 +11,15 @@ from datetime import timedelta
 import pandas as pd
 
 
-samples = pd.read_csv('samples.csv', index_col='sample_accession')
-urls    = {sample_acc: list(samples.loc[sample_acc].fastq_ftp) for sample_acc in samples.index.unique()}
-
-# Subset the accessions to use
-small_samples = (samples.groupby('sample_accession')['read_count'].sum() / 2 < 250000000)
-samples = samples[small_samples]
-samples = pd.concat([samples.query('library_source == "TRANSCRIPTOMIC"').head(config['n_txomes'] * 2), 
-                     samples.query('library_source == "GENOMIC"').head(config['n_genomes'] * 2)])
+def read_sample_csv(path):
+    return pd.read_csv(path, index_col='sample_accession')
 
 
-def paired_stream_url_subst(accession):
+def build_sample_urls(samples):
+    return {sample_acc: list(samples.loc[sample_acc].fastq_ftp) for sample_acc in samples.index.unique()}
+
+
+def paired_stream_url_subst(accession, samples):
     url = samples.loc[accession]['fastq_ftp']
     if ';' in url:
         l, _, r = url.partition(';')
@@ -29,7 +27,7 @@ def paired_stream_url_subst(accession):
     raise ValueError('Should be paired.')
 
 
-def paired_url_split(accession):
+def paired_url_split(accession, samples):
     url = samples.loc[accession]['fastq_ftp']
     if ';' in url:
         l, _, r = url.partition(';')

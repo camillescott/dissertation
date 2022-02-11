@@ -2,6 +2,7 @@ import platform
 
 configfile: "config/config.yaml"
 
+
 rule all:
   input: 'index/_book/dissertation.pdf'
 
@@ -51,3 +52,6 @@ rule install_goetia:
       cd goetia
       make install
   '''
+
+include: 'common.snakefile'
+include: 'chap1.snakefile'

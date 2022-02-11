@@ -64,7 +64,6 @@ rule stream_solid:
         time = lambda _: as_minutes(hours=16)
     threads: 1
     log: 'logs/{sample_accession}/solid-{solid_min_count}/to-{consumer}.log'
-    log: 'logs/{sample_accession}/diginorm-{diginorm_coverage}/to-{consumer}.log'
     shell:
         'mkdir -p results/{wildcards.sample_accession}/solid-{solid_min_count} && ' 
         'goetia filter solid -i {input} --pairing-mode split '
