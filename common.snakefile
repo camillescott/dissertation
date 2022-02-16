@@ -12,7 +12,7 @@ import pandas as pd
 
 
 def read_sample_csv(path):
-    return pd.read_csv(path, index_col='sample_accession')
+    return pd.read_csv(path, index_col='sample_accession', comment='#')
 
 
 def build_sample_urls(samples):
