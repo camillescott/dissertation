@@ -279,3 +279,7 @@ index/_bookdown*
 .snakemake
 .vscode
 index/_book
+
+data/fastx/*.fq.gz
+results/
+build/
