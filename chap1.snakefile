@@ -28,6 +28,19 @@ def get_diffs(df):
                          't': df['elapsed_s'][1:]})
 
 
+def normalize_metrics(data):
+    data['t_norm'] = data['t'] / data['t'].max()
+
+    cdbg_cols =['n_full', 'n_tips', 'n_islands', 'n_trivial', 'n_circular']
+    for col in cdbg_cols:
+        data[col + '_p'] = data[col] / data['n_unodes']
+    data['dnode_p'] = data['n_dnodes'] / (data['n_unodes'] + data['n_dnodes'])
+    data['kmer_p'] = data['n_unique_kmers'] / data['n_unique_kmers'].max()
+    prop_cols = [col + '_p' for col in cdbg_cols] + [ 'kmer_p']
+    
+    return data, prop_cols
+
+
 rule download_stream_cdbg_build:
     conda: 'envs/goetia.yml'
     input:
@@ -52,13 +65,13 @@ rule download_stream_cdbg_build:
     '''
 
 
-rule results_chap_one_figure_one:
+rule all_download_stream_cdbg_build:
     input:
         expand('results/chap1/cdbg-stream/{accession}/goetia.cdbg.stats.json',
                accession = TXOMIC_SAMPLES.index.unique())
 
 
-rule chap_one_figure_one:
+rule chap_one_results_figure_one:
     output:
         'index/figure/chap1/chap1-results-dl-build-speed.png'
     run:
@@ -95,3 +108,38 @@ rule chap_one_figure_one:
         
             sns.lineplot(data=stream_df, x='t', y='MiB/s', hue='accession', lw=1, legend=True, ax=ax)
             ax.set_title('Data rate of compaction stream piped from $\mathtt{curl}$')
+            ax.set_ylabel('Stream Data Rate (MiB/s)')
+            ax.set_xlabel('Time in Stream (seconds)')
+
+
+rule chap_one_results_figure_two:
+    output:
+        'index/figure/chap1/chap1-results-dnode-prop.png'
+    run:
+        import matplotlib.pyplot as plt
+        plt.switch_backend('Agg')
+
+        files = sorted(glob.glob('results/chap1/cdbg-stream/*/goetia.cdbg.stats.json'))
+
+        metrics_df = []
+        for f in files:
+            print(f)
+            try:
+                df = pd.read_json(f)
+                df, prop_cols = normalize_metrics(df)
+            except ValueError:
+                pass
+            else:
+                df['t_norm'] = df['t'] / df['t'].max()
+                metrics_df.append(df)
+        metrics_df = pd.concat(metrics_df).reset_index(drop=True)
+        metrics_df['sample_name'] = metrics_df.sample_name.str.rpartition('.')[0]
+
+        with sns.axes_style("ticks"), \
+             FigureManager(filename=output[0], tight_layout=True, figsize=(12,8)) as (fig, ax):
+            
+            sns.lineplot(data=metrics_df, x='t_norm', y='dnode_p', hue='sample_name', lw=1, ax=ax)
+            ax.set_ylabel('Decision Node Proportion')
+            ax.set_xlabel('Normalized Position in Stream')
+            ax.set_title('Proportion of cDBG nodes that are decision nodes')
+            ax.legend(bbox_to_anchor=(1.05, .5), loc='center left', title='Sample Accession')

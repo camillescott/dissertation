@@ -174,6 +174,17 @@ If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a nei
 	\caption{\label{fig:disturbed-dnodes}Caption describing decision nodes, references algorithm.}
 \end{figure}
 
+### Analysis Parameters
+
+```{r goetia-version, echo=FALSE, collapse=TRUE}
+library(git2r)
+repo <- repository("../build/goetia")
+sha <- commits(repo)[[1]]$sha
+```
+
+Results for Fig. \@ref(fig:fig-chap1-dl-build-speed), \@ref(fig:fig-chap1-dnode-prop), and [ref] were generated with `goetia` at commit `r sha` using the command `goetia cdbg build` `-K 31` `-S PHMapStorage` `-H FwdLemireShifter` `--interval 5000000` `--track-cdbg-metrics` `--pairing-mode split`.
+
+
 ## Results {#chap1-results}
 
 ### Implementation: the \texttt{goetia} library and tools {#chap1-results-implementation}
@@ -202,6 +213,18 @@ Paired-end samples were streamed directly from the European Nucleotide Archive (
 The data rates were measured using the `pv`  command as follows: `curl -sL [URL] | pv -tbn 2>> [RESULTS] 1>> [OUTPUT]`.
 `[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results.
 
+When reading sequences from the ENA using `curl`, `goetia cdbg` compacts at rates ranging from 2 to 5 MiB/s.
+These are approximately the download rates from the ENA without compaction.
+Compaction rates are largely dictated by the chosen de Bruijn graph parameter `K`, the error rate of the sequencing experiment, and the polymorphism of the sequence being sampled.
+The latter parameters drive the number of the decision nodes in the assembly graph: the more decision nodes in the assembly graph, the more fragmented, and the more graph operations required per insert.
+
+While these rates are sufficient for compacting directly downloaded sequence, the compaction rate is not the only important factor.
+In particular, memory requirements, which are also driven by the number of decision nodes (as well as the number of unique $k$-mers), are often the limiting factor.
+With exact counting backends, memory use grows as additional $k$-mers are added to the de Bruijn graph; non-exact, fixed-memory backends can help alleviate this issue, at the cost of producing a compacted dBG not necessarily exactly equivalent to the actual cDBG.
+For exact backends, we have the option to terminate the compaction process when memory limits are increased.
+Assuming randomized ordering of the strean, the resulting cDBG will be equivalent to one built by downsampling the input sequences.
+
+
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
 
@@ -226,6 +249,18 @@ cDBGs with a large proportion of short unitigs are considered highly fragmented;
 Fragmented assembly graphs will necessarily lead to fragmented assemblies downstream.
 Note that fragmentation corresponds with the graph topology from Fig. \@ref(fig:fig-chap1-node-metrics), with the *S. cerevisiae* cDBG less dominated by islands and tips showing less fragmentation.
 We also observe that this assembly graph shows the characteristic flattening behavior in its fragmentation curves, suggesting that this graph is sufficiently "saturated" and should produce better results downstream.
+
+```{r fig-chap1-dnode-prop, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-dnode-prop)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-dnode-prop.png")
+```
+
+(ref:fig-chap1-dnode-prop) **Decision node saturation as a proportion of all nodes in the cDBG.**
+The proportion of decision nodes was calculated by dividing the number of decision nodes at the given time by the summed number of decision and unitigs nodes. Position in stream is the $k$-mer position and normalized by the end position of each sample. 
+
+Fig. \@ref(fig:fig-chap1-dnode-prop) demonstrates the accumulation of decision nodes as the dBG is compacted.
+Most samples demonstrate the saturation behavior previously discussed.
+As additional sequence is added to the graph, decision nodes make up a higher proportion of the cDBG.
+Eventually, decision node proportion stabilizes.
 
 ```{r fig-chap1-unitig-frag, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-unitig-frag)", fig.align="center", out.width="100%"}
 include_graphics("figure/chap1/chap1-results-unitig-frag.png")
