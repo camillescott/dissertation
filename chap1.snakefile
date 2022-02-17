@@ -14,52 +14,6 @@ TXOMIC_SAMPLES = read_sample_csv('config/chap1-txomes.csv')
 TXOMIC_URLS = build_sample_urls(TXOMIC_SAMPLES)
 
 
-rule download_sample_left:
-    output:
-        data = 'data/fastx/{accession}.1.fq.gz'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[0]
-    shell: '''
-        set -o pipefail; curl -sL -o {output.data} "{params.url}" 
-    '''
-
-
-rule download_sample_right:
-    output:
-        data = 'data/fastx/{accession}.2.fq.gz'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[1]
-    shell: '''
-        set -o pipefail; curl -sL -o {output.data} "{params.url}" 
-    '''
-
-
-rule download_stream_sample_left:
-    output:
-        data = pipe('data/streams/{accession}.pipe.1.fq.gz'),
-        stats = 'results/chap1/{accession}.1.curl.txt'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[0]
-    shell: '''
-        set -o pipefail; curl -sL "{params.url}" | pv -tbn 2>> {output.stats} 1>> {output.data}
-    '''
-
-
-rule download_stream_sample_right:
-    output:
-        data = pipe('data/streams/{accession}.pipe.2.fq.gz'),
-        stats = 'results/chap1/{accession}.2.curl.txt'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[1]
-    shell: '''
-        set -o pipefail; curl -sL "{params.url}" | pv -tbn 2>> {output.stats} 1>> {output.data}
-    '''
-
-
 rule download_stream_cdbg_build:
     conda: 'envs/goetia.yml'
     input:
@@ -82,6 +36,7 @@ rule download_stream_cdbg_build:
         --track-cdbg-metrics --results-dir results/chap1/cdbg-stream/{wildcards.accession}/ --pairing-mode split \
         -i {input.left} {input.right}
     '''
+
 
 rule results_figure_one:
     input:
