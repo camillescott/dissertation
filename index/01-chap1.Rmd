@@ -193,7 +193,14 @@ While streaming approaches are often more computationally complex than offline a
 Here, we show that our streaming compaction prototype functions at speeds practical for use as a prefilter for sequences directly downloaded from a remote source; that is, we can compact sequences at a rate comensurate with the speed of many sequence archives, with disk access only occurring when writing assembly graph metrics and saving the final resulting compact dBG.
 This prototype implementation struggles with memory scaling for large genomes, and as such, we have limited the input read data sets to samples with less than 100 million fragments.
 
+```{r fig-chap1-dl-build-speed, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-dl-build-speed)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-dl-build-speed.png")
+```
 
+(ref:fig-chap1-dl-build-speed) **Streamed compaction data rates of various samples.**
+Paired-end samples were streamed directly from the European Nucleotide Archive (ENA) using the `curl` command.
+The data rates were measured using the `pv`  command as follows: `curl -sL [URL] | pv -tbn 2>> [RESULTS] 1>> [OUTPUT]`.
+`[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results.
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
