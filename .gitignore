@@ -283,3 +283,4 @@ index/_book
 data/fastx/*.fq.gz
 results/
 build/
+notebooks/.ipynb_checkpoints/
