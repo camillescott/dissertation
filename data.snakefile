@@ -8,9 +8,9 @@
 
 
 ALL_SAMPLES = pd.concat([read_sample_csv('config/chap1-genomes.csv'),
-                     read_sample_csv('config/chap1-txomes.csv'),
-                     read_sample_csv('config/chap2-genomes.csv'),
-                     read_sample_csv('config/chap2-txomes.csv')])
+                         read_sample_csv('config/chap1-txomes.csv'),
+                         read_sample_csv('config/chap2-genomes.csv'),
+                         read_sample_csv('config/chap2-txomes.csv')])
 ALL_SAMPLES.drop_duplicates(inplace=True)
 ACCESSIONS = ALL_SAMPLES.index.unique()
 

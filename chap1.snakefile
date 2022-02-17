@@ -21,6 +21,7 @@ GENOMIC_URLS = build_sample_urls(GENOMIC_SAMPLES)
 TXOMIC_SAMPLES = read_sample_csv('config/chap1-txomes.csv')
 TXOMIC_URLS = build_sample_urls(TXOMIC_SAMPLES)
 
+print('Chapter One Txomic Accessions: ', ' '.join(TXOMIC_SAMPLES.index.unique()))
 
 def get_diffs(df):
     return pd.DataFrame({'d_t': df['elapsed_s'][1:].values - df['elapsed_s'][:-1].values,
@@ -65,9 +66,42 @@ rule download_stream_cdbg_build:
     '''
 
 
-rule all_download_stream_cdbg_build:
+rule predownloaded_cdbg_build:
+    conda: 'envs/goetia.yml'
+    input:
+        left  = 'data/fastx/{accession}.1.fq.gz',
+        right = 'data/fastx/{accession}.2.fq.gz'
+    output:
+        'results/chap1/cdbg-build/{accession}/goetia.cdbg.components.json'
+    threads: 3
+    resources:
+        mem = 32000,
+        time = lambda _: as_minutes(hours=8)
+    log: 'logs/cdbg-build/build-{accession}.log'
+    params:
+        storage_type     = 'PHMapStorage',
+        interval         = 500000,
+        K                = 31,
+        sample_size      = 10000,
+        bins             = ' '.join((str(b) for b in [31, 50, 100, 200, 400, 800]))
+    shell: '''
+        goetia cdbg build -K {params.K} -S PHMapStorage -H FwdLemireShifter --interval {params.interval} \
+        --track-cdbg-components --component-sample-size {params.sample_size} --cdbg-components-tick 50 \
+        --track-unitig-bp --unitig-bp-bins {params.bins} --unitig-bp-tick 10 \
+        --results-dir results/chap1/cdbg-build/{wildcards.accession}/ \
+        --pairing-mode split -i {input.left} {input.right}
+    '''
+
+
+rule all_download_stream_cdbg_build_txomes:
     input:
         expand('results/chap1/cdbg-stream/{accession}/goetia.cdbg.stats.json',
+               accession = TXOMIC_SAMPLES.index.unique())
+
+
+rule all_predownloaded_cdbg_build_txomes:
+    input:
+        expand('results/chap1/cdbg-build/{accession}/goetia.cdbg.components.json',
                accession = TXOMIC_SAMPLES.index.unique())
 
 
