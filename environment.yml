@@ -16,6 +16,7 @@ dependencies:
   - jupyterlab
   - nb_conda_kernels
   - taxonomy
+  - ijson
   - pip
   - pip:
     - cmdbench

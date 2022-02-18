@@ -80,13 +80,14 @@ rule predownloaded_cdbg_build:
     log: 'logs/cdbg-build/build-{accession}.log'
     params:
         storage_type     = 'PHMapStorage',
-        interval         = 500000,
+        interval         = 1000000,
         K                = 31,
         sample_size      = 10000,
         bins             = ' '.join((str(b) for b in [31, 50, 100, 200, 400, 800]))
     shell: '''
         goetia cdbg build -K {params.K} -S PHMapStorage -H FwdLemireShifter --interval {params.interval} \
-        --track-cdbg-components --component-sample-size {params.sample_size} --cdbg-components-tick 50 \
+        --track-cdbg-metrics --verbose \
+        --track-cdbg-components --component-sample-size {params.sample_size} --cdbg-components-tick exp \
         --track-unitig-bp --unitig-bp-bins {params.bins} --unitig-bp-tick 10 \
         --results-dir results/chap1/cdbg-build/{wildcards.accession}/ \
         --pairing-mode split -i {input.left} {input.right}
