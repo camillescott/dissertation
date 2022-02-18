@@ -33,7 +33,8 @@ rule build_thesis:
                         '10-appendix',
                         '98-colophon',
                         '99-references')),
-    bibliography='index/bib/dissertation.bib'
+    bibliography='index/bib/dissertation.bib',
+    goetia='build/goetia/README.md'
   shell: """
       cd index 
       rm -f _main.Rmd
@@ -43,15 +44,24 @@ rule build_thesis:
   """
 
 
+rule clone_goetia:
+  output: 'build/goetia/README.md'
+  shell: '''
+    mkdir -p build
+    cd build
+    git clone git@github.com:camillescott/goetia.git || git -C goetia pull
+  '''
+
+
 rule install_goetia:
   conda: 'envs/goetia.yml'
+  input: 'build/goetia/README.md'
   shell: '''
-      mkdir -p build
-      cd build
-      git clone git@github.com:camillescott/goetia.git || git -C goetia pull
-      cd goetia
+      cd build/goetia
       make install
   '''
 
+
 include: 'common.snakefile'
+include: 'data.snakefile'
 include: 'chap1.snakefile'

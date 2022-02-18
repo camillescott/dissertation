@@ -74,11 +74,19 @@ jobs:
           index/_book/cache/requests-cache.sqlite
         key: ${{ matrix.label }}-manubot-${{ hashFiles('index/_book/cache/references-cache.json') }}-${{ env.CACHE_NUMBER }}
 
+    - name: Checkout goetia
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: camillescott/goetia
+        path: build/goetia
+
     - name: Run pipeline
       run: |
         export PATH="/usr/share/miniconda3/bin:$PATH"
         source activate dissertation
         snakemake -j 1 --use-conda --conda-frontend mamba
+
     - name: upload PDF to GH artifacts
       uses: actions/upload-artifact@v1
       with:
