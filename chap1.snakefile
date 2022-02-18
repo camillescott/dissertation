@@ -20,6 +20,9 @@ rule download_sample_left:
     params:
         url = lambda wildcards: paired_url_split(wildcards.accession,
                                                  GENOMIC_SAMPLES)[0]
+    resources:
+        mem = 1000,
+        time = lambda _: as_minutes(hours=8)
     shell: '''
         set -o pipefail; curl -sL -o {output.data} "{params.url}" 
     '''
@@ -31,6 +34,9 @@ rule download_sample_right:
     params:
         url = lambda wildcards: paired_url_split(wildcards.accession,
                                                  GENOMIC_SAMPLES)[1]
+    resources:
+        mem = 1000,
+        time = lambda _: as_minutes(hours=8)
     shell: '''
         set -o pipefail; curl -sL -o {output.data} "{params.url}" 
     '''
@@ -43,6 +49,9 @@ rule download_stream_sample_left:
     params:
         url = lambda wildcards: paired_url_split(wildcards.accession,
                                                  GENOMIC_SAMPLES)[0]
+    resources:
+        mem = 1000,
+        time = lambda _: as_minutes(hours=8)
     shell: '''
         set -o pipefail; curl -sL "{params.url}" | pv -tbn 2>> {output.stats} 1>> {output.data}
     '''
@@ -55,6 +64,9 @@ rule download_stream_sample_right:
     params:
         url = lambda wildcards: paired_url_split(wildcards.accession,
                                                  GENOMIC_SAMPLES)[1]
+    resources:
+        mem = 1000,
+        time = lambda _: as_minutes(hours=8)
     shell: '''
         set -o pipefail; curl -sL "{params.url}" | pv -tbn 2>> {output.stats} 1>> {output.data}
     '''
@@ -69,7 +81,7 @@ rule download_stream_cdbg_build:
         'results/chap1/cdbg-stream/{accession}/goetia.cdbg.stats.json'
     threads: 3
     resources:
-        mem = 32000,
+        mem = 96000,
         time = lambda _: as_minutes(hours=8)
     log: 'logs/cdbg-build/stream-{accession}.log'
     params:
