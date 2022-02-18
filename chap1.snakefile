@@ -94,6 +94,47 @@ rule predownloaded_cdbg_build:
     '''
 
 
+rule hash_stream_baseline:
+    conda: 'envs/goetia.yml'
+    input:
+        left  = 'data/fastx/{accession}.1.fq.gz',
+        right = 'data/fastx/{accession}.2.fq.gz'
+    output:
+        'results/chap1/hash-stream-baseline/{accession}/metrics.json'
+    threads: 3
+    resources:
+        mem = 4000,
+        time = lambda _: as_minutes(hours=1)
+    params:
+        K = 31,
+        interval = 1000000
+    shell: '''
+        goetia utils hash-stream -K {params.K} --interval {params.interval} \
+        --metrics {output} \
+        --pairing-mode split -i {input.left} {input.right}
+    '''
+
+rule dbg_stream_baseline:
+    conda: 'envs/goetia.yml'
+    input:
+        left  = 'data/fastx/{accession}.1.fq.gz',
+        right = 'data/fastx/{accession}.2.fq.gz'
+    output:
+        'results/chap1/dbg-stream-baseline/{accession}/metrics.json'
+    threads: 3
+    resources:
+        mem = 4000,
+        time = lambda _: as_minutes(hours=1)
+    params:
+        K = 31,
+        interval = 1000000
+    shell: '''
+        goetia utils hash-stream -K {params.K} --dbg --interval {params.interval} \
+        --metrics {output} \
+        --pairing-mode split -i {input.left} {input.right}
+    '''
+
+
 rule all_download_stream_cdbg_build_txomes:
     input:
         expand('results/chap1/cdbg-stream/{accession}/goetia.cdbg.stats.json',
@@ -104,6 +145,18 @@ rule all_predownloaded_cdbg_build_txomes:
     input:
         expand('results/chap1/cdbg-build/{accession}/goetia.cdbg.components.json',
                accession = TXOMIC_SAMPLES.index.unique())
+
+
+rule all_hash_stream_baseline:
+    input:
+        expand('results/chap1/hash-stream-baseline/{accession}/metrics.json',
+                accession = TXOMIC_SAMPLES.index.unique())
+
+
+rule all_dbg_stream_baseline:
+    input:
+        expand('results/chap1/dbg-stream-baseline/{accession}/metrics.json',
+                accession = TXOMIC_SAMPLES.index.unique())
 
 
 rule chap_one_results_figure_one:
