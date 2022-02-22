@@ -92,7 +92,7 @@ The stream may either be finite or infinite; when we conceptualize by number of 
 A closely related group is the semi-streaming algorithm, which are those that make *few* passes over the data, typically two or less.
 These algorithms are of course concerned with finite streams of data.
 
-Streaming approaches find the most use when data is too large to fit in main memory; for example, when working with massive network traffic data one may only be concerned with some properties of the underlying graph and which itself is much too large for main memory, necessitating streaming approaches that drill down specifically to those properties.
+Streaming approaches find the most use when data is too large to fit in main memory; for example, when working with massive network traffic data one may only be concerned with some properties of the underlying graph which itself is much too large for main memory, necessitating streaming approaches that drill down specifically to those properties.
 In a genomics context, we might be interested in analyzing a set of sequencing reads without generating intermediate files or making multiple passes over large text files of sequences.
 
 #### Streaming in Omics
@@ -157,7 +157,7 @@ Hence, when a collection of sequences sampled from an underlying larger set of s
 ### Compact de Bruijn Graphs
 
 While the standard de Bruijn graph is a useful abstraction, in practice, most implementations only use it as an intermediate representation.
-The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in- and out-degree of $1$, such graphs contain large quantities of redundant $k$-mers; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in introduces $k$ new nodes in the graph.
+The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in- and out-degree of $1$, such graphs contain large quantities of redundant $k$-mers; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in an input sequence can introduce up to $k$ new nodes in the graph.
 As a result, even small error and polymorphism rates in moderate sized data produce graphs with hundreds of millions or billions of nodes.
 
 These problems are addresses by the Compact de Bruijn Graph (cDBG).
