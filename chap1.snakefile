@@ -36,65 +36,6 @@ def numerize_fmtr(x, pos):
     return numerize.numerize(x)
 
 
-
-rule download_sample_left:
-    output:
-        data = 'data/fastx/{accession}.1.fq.gz'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[0]
-    resources:
-        mem = 1000,
-        time = lambda _: as_minutes(hours=8)
-    shell: '''
-        set -o pipefail; curl -sL -o {output.data} "{params.url}" 
-    '''
-
-
-rule download_sample_right:
-    output:
-        data = 'data/fastx/{accession}.2.fq.gz'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[1]
-    resources:
-        mem = 1000,
-        time = lambda _: as_minutes(hours=8)
-    shell: '''
-        set -o pipefail; curl -sL -o {output.data} "{params.url}" 
-    '''
-
-
-rule download_stream_sample_left:
-    output:
-        data = pipe('data/streams/{accession}.pipe.1.fq.gz'),
-        stats = 'results/chap1/{accession}.1.curl.txt'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[0]
-    resources:
-        mem = 1000,
-        time = lambda _: as_minutes(hours=8)
-    shell: '''
-        set -o pipefail; curl -sL "{params.url}" | pv -tbn 2>> {output.stats} 1>> {output.data}
-    '''
-
-
-rule download_stream_sample_right:
-    output:
-        data = pipe('data/streams/{accession}.pipe.2.fq.gz'),
-        stats = 'results/chap1/{accession}.2.curl.txt'
-    params:
-        url = lambda wildcards: paired_url_split(wildcards.accession,
-                                                 GENOMIC_SAMPLES)[1]
-    resources:
-        mem = 1000,
-        time = lambda _: as_minutes(hours=8)
-    shell: '''
-        set -o pipefail; curl -sL "{params.url}" | pv -tbn 2>> {output.stats} 1>> {output.data}
-    '''
-
-
 def get_diffs(df):
     return pd.DataFrame({'d_t': df['elapsed_s'][1:].values - df['elapsed_s'][:-1].values,
                          'd_bytes': df['bytes_read'][1:].values - df['bytes_read'][:-1].values,
