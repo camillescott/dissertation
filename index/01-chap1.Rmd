@@ -225,6 +225,17 @@ For exact backends, we have the option to terminate the compaction process when 
 Assuming randomized ordering of the strean, the resulting cDBG will be equivalent to one built by downsampling the input sequences.
 
 
+### Streaming Compaction Performance is Dominated by dBG Construction
+
+```{r fig-chap1-rate-comp, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-rate-comp)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-rate-comp.png")
+```
+
+(ref:fig-chap1-rate-comp) **Processing rates of $k$-mer hashing. dBG construction, and compaction.**
+Processing rates in $k$-mers per second and sequences per second of increasingly complex dBG tasks.
+Each point is the rate result from a distinct transcriptomic sample.
+
+
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
 
@@ -265,6 +276,12 @@ Eventually, decision node proportion stabilizes.
 ```{r fig-chap1-unitig-frag, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-unitig-frag)", fig.align="center", out.width="100%"}
 include_graphics("figure/chap1/chap1-results-unitig-frag.png")
 ```
+
+```{r fig-chap1-txome-comps, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-txome-comps)", fig.align="center", out.height="90%"}
+include_graphics("figure/chap1/chap1-results-txome-comps.png")
+```
+
+(ref:fig-chap1-txome-comps) **Number of components and growth of largest component in transcriptomic samples.**
 
 (ref:fig-chap1-unitig-frag) **Changes in fragmentation as more sequences are observed.**
 Binned unitig lengths for the same three transcriptomes as fig. \@ref(fig:fig-chap1-node-metrics).
