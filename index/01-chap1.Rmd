@@ -183,6 +183,9 @@ sha <- commits(repo)[[1]]$sha
 ```
 
 Results for Fig. \@ref(fig:fig-chap1-dl-build-speed), \@ref(fig:fig-chap1-dnode-prop), and [ref] were generated with `goetia` at commit `r sha` using the command `goetia cdbg build` `-K 31` `-S PHMapStorage` `-H FwdLemireShifter` `--interval 5000000` `--track-cdbg-metrics` `--pairing-mode split`.
+Streaming solid filtration was performed with `goetia solid filter` `-K 31` `-S ByteStorage` `-H CanLemireShifter` `-x 2e9 -N 4` `-C 3 -P 0.8` `--pairing-mode split`.
+
+Benchmarking was performed on a system with an AMD Ryzen 9 5900X CPU, 64GB of RAM, and a SATA SSD.
 
 
 ## Results {#chap1-results}
@@ -227,6 +230,15 @@ Assuming randomized ordering of the strean, the resulting cDBG will be equivalen
 
 ### Streaming Compaction Performance is Dominated by dBG Construction
 
+To assess the performance of streaming compaction in bioinformatics pipelines, we compare it to two other streaming $k$-mer methods: only hashing the $k$-mers in the input sequences with the same underlying hash function, and building the de Bruijn graph with the same storage backend.
+$k$-mer hashing is performed in dozens of existing programs, and here, regularly exceeds 40 million $k$-mers per second, or 600 thousand sequences per second.
+de Bruijn graph construction is mostly determined by the speed of the `insert` operation on the underlying storage backend.
+With the exact backend using `parallel-hashmap`, we approach 10 million $k$-mers per second or 100 thousand sequences per second; note that the hashing task is a subset of the dBG construction task.
+Compaction hovers around 3 million $k$-mers per second, or 50 thousand sequences per second.
+Fig. \@ref(fig:fig-chap1-rate-comp) shows the full results of this test.
+We show results in both $k$-mers per second and sequences per second, but the underling timing in our implementation is based on $k$-mers, as sequence length varies between samples.
+
+
 ```{r fig-chap1-rate-comp, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-rate-comp)", fig.align="center", out.width="100%"}
 include_graphics("figure/chap1/chap1-results-rate-comp.png")
 ```
@@ -235,6 +247,11 @@ include_graphics("figure/chap1/chap1-results-rate-comp.png")
 Processing rates in $k$-mers per second and sequences per second of increasingly complex dBG tasks.
 Each point is the rate result from a distinct transcriptomic sample.
 
+Compaction tends to be more than an order of magnitude slower than only hashing, and about three times slower than dBG construction.
+As dBG insertion is a subset of the compaction task, insertion speed is a top candidate for optimization.
+`goetia` also does little in the way of optimizing string operations, such as bit packing or efficiently allocating memory with freelists, suggesting considerable room for improvement over the existing prototype.
+Finally, this implementation is single-threaded.
+A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work.
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
