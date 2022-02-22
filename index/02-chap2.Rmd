@@ -50,7 +50,7 @@ MinHash sketches computed with `sourmash` using $K=31$ and $N=25000$. Distances 
 include_graphics("figure/chap2/draff-rolling-wgs-txome.png")
 ```
 
-(ref:fig-chap2-draff-basic) **Streaming $log$-Bray Curtis distance of of `draff` sketches.**
+(ref:fig-chap2-draff-basic) **Streaming $log$-Bray Curtis distance of `draff` sketches.**
 Draff sketches computed with $W=31$, $K=9$. On the y-axis, $log$-Bray Curtis distance calculated between successive sketches; on the x-axis, normalized time in number of $k$-mers. Curves represent sketches sampled at varying $k$-mer intervals.
 
 ### The Draff Sketch Enables Novel Dimensional Analyses of Assembly Graphs
