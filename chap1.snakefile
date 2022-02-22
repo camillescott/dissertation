@@ -119,6 +119,60 @@ rule predownloaded_cdbg_build:
     '''
 
 
+rule stream_solid:
+    '''
+    Filter out reads that don't have the specified proportion of k-mers
+    with count over the given threshold.
+    '''
+    conda: 'envs/goetia.yml'
+    input:
+        left  = 'data/fastx/{accession}.1.fq.gz',
+        right = 'data/fastx/{accession}.2.fq.gz'
+    output:
+        pipe('results/chap1/solid-filter/{accession}.to-{consumer}.pipe.fastq')
+    resources:
+        mem       = 8000,
+        time      = lambda _: as_minutes(hours=8),
+    params:
+        K         = 31,
+        min_count = 3,
+        min_prop  = 0.8
+    threads: 1
+    log: 'logs/solid-filter/{accession}.to-{consumer}.pipe.log'
+    shell:
+        'goetia filter solid -i {input.left} {input.right} --pairing-mode split '
+        '-K {params.K} -C {params.min_count} -P {params.min_prop} '
+        '-S ByteStorage -H CanLemireShifter -x 2e9 -N 4 '
+        '--interval 1000000 -o {output} > {log} 2>&1'
+
+
+rule solid_cdbg_build:
+    conda: 'envs/goetia.yml'
+    input:
+        'results/chap1/solid-filter/{accession}.to-solid-cdbg.pipe.fastq'
+    output:
+        'results/chap1/solid-cdbg-build/{accession}/goetia.cdbg.components.json'
+    threads: 3
+    resources:
+        mem = 32000,
+        time = lambda _: as_minutes(hours=8)
+    log: 'logs/solid-cdbg-build/{accession}/goetia.log'
+    params:
+        storage_type     = 'PHMapStorage',
+        interval         = 1000000,
+        K                = 31,
+        sample_size      = 10000,
+        bins             = ' '.join((str(b) for b in [31, 50, 100, 200, 400, 800]))
+    shell: '''
+        goetia cdbg build -K {params.K} -S PHMapStorage -H FwdLemireShifter --interval {params.interval} \
+        --track-cdbg-metrics --verbose \
+        --track-cdbg-components --component-sample-size {params.sample_size} --cdbg-components-tick exp \
+        --track-unitig-bp --unitig-bp-bins {params.bins} --unitig-bp-tick 10 \
+        --results-dir results/chap1/solid-cdbg-build/{wildcards.accession}/ \
+        --pairing-mode single -i {input}
+    '''
+
+
 rule hash_stream_baseline:
     conda: 'envs/goetia.yml'
     input:
@@ -169,6 +223,12 @@ rule all_download_stream_cdbg_build_txomes:
 rule all_predownloaded_cdbg_build_txomes:
     input:
         expand('results/chap1/cdbg-build/{accession}/goetia.cdbg.components.json',
+               accession = TXOMIC_SAMPLES.index.unique())
+
+
+rule all_solid_cdbg_build_txomes:
+    input:
+        expand('results/chap1/solid-cdbg-build/{accession}/goetia.cdbg.components.json',
                accession = TXOMIC_SAMPLES.index.unique())
 
 
