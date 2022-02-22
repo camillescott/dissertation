@@ -271,7 +271,7 @@ include_graphics("figure/chap1/chap1-results-node-metrics.png")
 (ref:fig-chap1-node-metrics) **Dynamic metrics of the compact de Bruijn graph during construction.**
 cDBG metrics for transcriptomes of three eukaryotic microbes. The horizontal axis *t* is normalized sequence index within the sample; the vertical axis *p* is the proportion of the given type of cDBG node. See XXXCTBXXX \@ref(chap1-background-definitions) for definitions of node types. *kmer_p* is the cumulative number of unique $k$-mers in the underlying dBG.
 
-Fig. \@ref(fig:fig-chap1-node-metrics) demonstrates streaming measurement of unitig fragmentation.
+Fig. \@ref(fig:fig-chap1-unitig-frag) demonstrates streaming measurement of unitig fragmentation.
 As unitigs are created, split, or extended, a histogram of their lengths is updated.
 cDBGs with a large proportion of short unitigs are considered highly fragmented; this may be caused by low coverage, high error, or complex genome architecture.
 Fragmented assembly graphs will necessarily lead to fragmented assemblies downstream.
