@@ -244,9 +244,10 @@ We show results in both $k$-mers per second and sequences per second, but the un
 include_graphics("figure/chap1/chap1-results-rate-comp.png")
 ```
 
-(ref:fig-chap1-rate-comp) **Processing rates of $k$-mer hashing. dBG construction, and compaction.**
+(ref:fig-chap1-rate-comp) **Streaming processing rates of $k$-mer hashing. dBG construction, and compaction.**
 Processing rates in $k$-mers per second and sequences per second of increasingly complex dBG tasks.
 Each point is the rate result from a distinct transcriptomic sample.
+Higher values correspond to higher data rates and better performance.
 
 Compaction tends to be more than an order of magnitude slower than only hashing, and about three times slower than dBG construction.
 As dBG insertion is a subset of the compaction task, insertion speed is a top candidate for optimization.
