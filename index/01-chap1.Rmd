@@ -226,7 +226,7 @@ While these rates are sufficient for compacting directly downloaded sequence, th
 In particular, memory requirements, which are also driven by the number of decision nodes (as well as the number of unique $k$-mers), are often the limiting factor.
 With exact counting backends, memory use grows as additional $k$-mers are added to the de Bruijn graph; non-exact, fixed-memory backends can help alleviate this issue, at the cost of producing a compacted dBG not necessarily exactly equivalent to the actual cDBG.
 For exact backends, we have the option to terminate the compaction process when memory limits are increased.
-Assuming randomized ordering of the strean, the resulting cDBG will be equivalent to one built by downsampling the input sequences.
+Assuming randomized ordering of the stream, the resulting cDBG will be equivalent to one built by downsampling the input sequences.
 
 
 ### Streaming Compaction Performance is Dominated by dBG Construction
@@ -253,7 +253,7 @@ Compaction tends to be more than an order of magnitude slower than only hashing,
 As dBG insertion is a subset of the compaction task, insertion speed is a top candidate for optimization.
 `goetia` also does little in the way of optimizing string operations, such as bit packing or efficiently allocating memory with freelists, suggesting considerable room for improvement over the existing prototype.
 Finally, this implementation is single-threaded.
-A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work.
+A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work; some details on this backend can be found in \@ref(app-partitioned-storage).
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 

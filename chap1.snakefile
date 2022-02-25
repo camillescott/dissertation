@@ -534,7 +534,7 @@ rule chap_one_results_figure_four:
         rates_df = pd.concat((hash_metrics, dbg_metrics, cdbg_metrics))
 
         with sns.axes_style("ticks"), \
-             FigureManager(filename=output[0], tight_layout=True, ncols=2, figsize=(12,6)) as (fig, axs):
+             FigureManager(filename=output[0], ncols=2, figsize=(12,6)) as (fig, axs):
             
             mean_rates = data=rates_df.groupby(['sample_name', 'operation']).mean().reset_index()
             sns.boxplot(x='operation', y='kmers/s', data=mean_rates, ax=axs[0])
@@ -549,10 +549,12 @@ rule chap_one_results_figure_four:
             sns.despine(ax=axs[0], offset=10, trim=True)
             axs[0].yaxis.grid(ls='--')
             axs[0].yaxis.set_major_formatter(numerize_fmtr)
+            axs[0].set_ylabel('$k$-mers/s')
             
             sns.despine(ax=axs[1], offset=10, trim=True)
             axs[1].yaxis.grid(ls='--')
             axs[1].yaxis.set_major_formatter(numerize_fmtr)
+            axs[1].set_ylabel('sequences/s')
 
 
 rule chap_one_results_figure_five:

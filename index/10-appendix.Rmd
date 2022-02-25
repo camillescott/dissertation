@@ -102,7 +102,7 @@ A probabilistic sub-linear space data structure developed as a unilateral improv
 It makes use of SIMD instruction to speed up rank-and-select operations and has good cache locality, the latter a significant weakness of Bloom filters and CM sketches.
 These advantages are achieved at a considerable increase in implementation complexity.
 
-#### Partitioned Storage
+#### Partitioned Storage {#app-partitioned-storage}
 
 The `PartitionedStorage` exposes the same interface as the basic `Storage`, but supports partitioning the underlying data into disjoint sets.
 The API is agnostic to the method of partitioning; all that is required is a number of partitions and an additional parameter specifying the partition in which to store an item while inserting and querying.
