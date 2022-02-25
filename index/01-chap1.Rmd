@@ -218,7 +218,7 @@ The data rates were measured using the `pv`  command as follows: `curl -sL [URL]
 Performance here is bottlenecked by either the download bandwidth or the compaction rate, whichever is slower.
 
 When reading sequences from the ENA using `curl`, `goetia cdbg` compacts at rates ranging from 2 to 5 MiB/s.
-These are approximately the download rates from the ENA without compaction.
+These are approximately the download rates from the ENA on the test connection.
 Compaction rates are largely dictated by the chosen de Bruijn graph parameter `K`, the error rate of the sequencing experiment, and the polymorphism of the sequence being sampled.
 The latter parameters drive the number of the decision nodes in the assembly graph: the more decision nodes in the assembly graph, the more fragmented, and the more graph operations required per insert.
 

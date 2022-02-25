@@ -374,7 +374,7 @@ rule chap_one_results_figure_one:
             ldf = get_diffs(pd.read_table(left_fn, delim_whitespace=True, names=['elapsed_s', 'bytes_read']))
             rdf = get_diffs(pd.read_table(right_fn, delim_whitespace=True, names=['elapsed_s', 'bytes_read']))
             
-            bins = list(range(0, int(max(ldf.t.max(), rdf.t.max())), 5))
+            bins = list(range(0, int(max(ldf.t.max(), rdf.t.max())), 20))
             
             ldf = ldf.groupby(pd.cut(ldf.t, labels=bins[1:], bins=bins)).mean()
             ldf['bytes/s'] = ldf.d_bytes / ldf.d_t
@@ -390,15 +390,17 @@ rule chap_one_results_figure_one:
         stream_df = pd.concat(stream_df).reset_index(drop=True)
 
         with sns.axes_style("ticks"), FigureManager(filename=output[0], figsize=(12,8)) as (fig, ax):
-            random.seed(42)
-            subsampled = random.sample(list(stream_df.accession.unique()), 8)
+            #random.seed(42)
+            #subsampled = random.sample(list(stream_df.accession.unique()), 8)
         
-            sns.lineplot(data=stream_df, x='t', y='MiB/s', hue='accession', lw=1, legend=True, ax=ax)
+            sns.lineplot(data=stream_df, x='t', y='MiB/s', hue='accession', lw=1.5, legend=True, ax=ax)
             ax.set_title('Data rate of compaction stream piped from $\mathtt{curl}$')
             ax.set_ylabel('Stream Data Rate (MiB/s)')
             ax.set_xlabel('Time in Stream (seconds)')
-            sns.despine(fig=fig, offset=10, trim=True)
-            ax.yaxis.grid(ls='--')
+            ax.legend(bbox_to_anchor=(1.05, .5), loc='center left', title='Sample Accession')
+            despine(ax)
+            #sns.despine(fig=fig, offset=10, trim=True)
+            #ax.yaxis.grid(ls='--')
 
 
 rule chap_one_results_figure_two:
