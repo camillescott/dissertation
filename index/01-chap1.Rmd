@@ -214,10 +214,11 @@ include_graphics("figure/chap1/chap1-results-dl-build-speed.png")
 (ref:fig-chap1-dl-build-speed) **Streamed compaction data rates of various samples.**
 Paired-end samples were streamed directly from the European Nucleotide Archive (ENA) using the `curl` command.
 The data rates were measured using the `pv`  command as follows: `curl -sL [URL] | pv -tbn 2>> [RESULTS] 1>> [OUTPUT]`.
-`[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results.
+`[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results. Higher data rates correspond to higher compaction rates and better performance.
+Performance here is bottlenecked by either the download bandwidth or the compaction rate, whichever is slower.
 
 When reading sequences from the ENA using `curl`, `goetia cdbg` compacts at rates ranging from 2 to 5 MiB/s.
-These are approximately the download rates from the ENA without compaction.
+These are approximately the download rates from the ENA on the test connection.
 Compaction rates are largely dictated by the chosen de Bruijn graph parameter `K`, the error rate of the sequencing experiment, and the polymorphism of the sequence being sampled.
 The latter parameters drive the number of the decision nodes in the assembly graph: the more decision nodes in the assembly graph, the more fragmented, and the more graph operations required per insert.
 
@@ -225,7 +226,7 @@ While these rates are sufficient for compacting directly downloaded sequence, th
 In particular, memory requirements, which are also driven by the number of decision nodes (as well as the number of unique $k$-mers), are often the limiting factor.
 With exact counting backends, memory use grows as additional $k$-mers are added to the de Bruijn graph; non-exact, fixed-memory backends can help alleviate this issue, at the cost of producing a compacted dBG not necessarily exactly equivalent to the actual cDBG.
 For exact backends, we have the option to terminate the compaction process when memory limits are increased.
-Assuming randomized ordering of the strean, the resulting cDBG will be equivalent to one built by downsampling the input sequences.
+Assuming randomized ordering of the stream, the resulting cDBG will be equivalent to one built by downsampling the input sequences.
 
 
 ### Streaming Compaction Performance is Dominated by dBG Construction
@@ -243,15 +244,16 @@ We show results in both $k$-mers per second and sequences per second, but the un
 include_graphics("figure/chap1/chap1-results-rate-comp.png")
 ```
 
-(ref:fig-chap1-rate-comp) **Processing rates of $k$-mer hashing. dBG construction, and compaction.**
+(ref:fig-chap1-rate-comp) **Streaming processing rates of $k$-mer hashing. dBG construction, and compaction.**
 Processing rates in $k$-mers per second and sequences per second of increasingly complex dBG tasks.
 Each point is the rate result from a distinct transcriptomic sample.
+Higher values correspond to higher data rates and better performance.
 
 Compaction tends to be more than an order of magnitude slower than only hashing, and about three times slower than dBG construction.
 As dBG insertion is a subset of the compaction task, insertion speed is a top candidate for optimization.
 `goetia` also does little in the way of optimizing string operations, such as bit packing or efficiently allocating memory with freelists, suggesting considerable room for improvement over the existing prototype.
 Finally, this implementation is single-threaded.
-A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work.
+A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work; some details on this backend can be found in \@ref(app-partitioned-storage).
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
@@ -309,6 +311,23 @@ Another key advantage of streaming approaches is the ability to build analysis p
 Aside from the size of the raw reads themselves, which can be considerable, many programs output hundreds of gigabytes of intermediate files, reducing the accessibility of those methods where storage space is at a premium.
 For some analyses, streaming construction of the cDBG can avoid storing the input reads entirely: reads can be streamed directly from the SRA or ENA to streaming-enable quality control software such as Trimmomatic [@doi:10.1093/bioinformatics/btu170] or FASTX [@url:http://hannonlab.cshl.edu/fastx_toolkit/] for trimming and filtering, optionally through a pre-filter such as digital normalization [@brown_reference-free_2012; @doi:10.1371/journal.pone.0101271], and then compacted.
 To support these workflows, `goetia` implements a set of streaming filters: currently, a solidity filter which passes through reads with a set proportion of their $k$-mers with counts over a solid threshold, and a reimplementation of digital normalization using our library's efficient sequence parsing and storage backends.
+
+```{r fig-chap1-solid-human, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-solid-human)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-solid-human.png")
+```
+
+(ref:fig-chap1-solid-human) **Three _Homo sapiens_ RNA-seq samples in solidity pipeline.**
+RNA-seq data was compacted in a streaming manner, first with no pre-filter, and then with the `goetia filter solid` pre-filter.
+The sequences that passed the solidity filter were piped directly into the compaction program. These three samples represent a variety of coverage levels and two different selection methods which play into the differences in assembly graph structure.
+
+Fig. \@ref(fig:fig-chap1-solid-human) shows the results of a small pure-streaming compaction pipeline on three human RNA-seq samples.
+These samples were run through the `goetia` streaming solidity filter with the resulting sequences piped directly into the streaming compactor.
+Briefly, the streaming solidity filter inserts the $k$-mers from input sequences into a de Bruijn graph with a Count-min Sketch backend, a fixed-memory approximate membership query (AMQ) datastructure with a known false-positive rate.
+Sequences pass the filter if a given proportion of their $k$-mers have a multiplicity greater than a given threshold.
+Here, the solidity threshold was set at 2 observations (`-C 2`) with a required proportion of $0.8$ (`-P 0.8`).
+Filtering for solid sequences reduces the number of erroneous $k$-mers and is a common simplification tactic for compaction and assembly.
+Here, we make several observations: first, that solidity filtering drastically reduces the number of components and unique $k$-mers in the assembly graph; second, that it helps alleviate the number of nodes connected to a single, large component often observed in RNA-seq samples, particularly in those with Poly-A selection; and third, that the slopes of the component unique $k$-mer accumulation are increasingly flattened and demonstrate more "saturation" behavior when compared to raw sequence.
+The latter observation can be explained by both the removal of single-occurrence $k$-mers introduced by sequencing error and the domination of RNA-seq samples by very low-abundance sequence.
 
 
 ## Conclusions{#cdbg-conclusions}

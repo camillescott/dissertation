@@ -7,11 +7,10 @@ dependencies:
   - python=3.8
   - snakemake-minimal>=5.20.1
   - pandas>=1.4
-  - matplotlib-base
+  - matplotlib>=3.4
   - hvplot
   - scipy
   - seaborn
-  - ficus
   - sourmash
   - jupyterlab
   - nb_conda_kernels
@@ -21,3 +20,4 @@ dependencies:
   - pip:
     - cmdbench
     - numerize
+    - ficus>=0.7.1
