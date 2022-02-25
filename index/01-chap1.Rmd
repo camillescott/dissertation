@@ -310,6 +310,23 @@ Aside from the size of the raw reads themselves, which can be considerable, many
 For some analyses, streaming construction of the cDBG can avoid storing the input reads entirely: reads can be streamed directly from the SRA or ENA to streaming-enable quality control software such as Trimmomatic [@doi:10.1093/bioinformatics/btu170] or FASTX [@url:http://hannonlab.cshl.edu/fastx_toolkit/] for trimming and filtering, optionally through a pre-filer such as digital normalization [@brown_reference-free_2012; @doi:10.1371/journal.pone.0101271], and then compacted.
 To support these workflows, `goetia` implements a set of streaming filters: currently, a solidity filter which passes through reads with a set proportion of their $k$-mers with counts over a solid threshold, and a reimplementation of digital normalization using our library's efficient sequence parsing and storage backends.
 
+```{r fig-chap1-solid-human, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-solid-human)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/chap1-results-solid-human.png")
+```
+
+(ref:fig-chap1-solid-human) **Three _Homo sapiens_ RNA-seq samples in solidity pipeline.**
+RNA-seq data was compacted in a streaming manner, first with no pre-filter, and then with the `goetia filter solid` pre-filter.
+The sequences that passed the solidity filter were piped directly into the compaction program. These three samples represent a variety of coverage levels and two different selection methods which play into the differences in assembly graph structure.
+
+Fig. \@ref(fig:fig-chap1-solid-human) shows the results of a small pure-streaming compaction pipeline on three human RNA-seq samples.
+These samples were run through the `goetia` streaming solidity filter with the resulting sequences piped directly into the streaming compactor.
+Briefly, the streaming solidity filter inserts the $k$-mers from input sequences into a de Bruijn graph with a Count-min Sketch backend, a fixed-memory approximate membership query (AMQ) datastructure with a known false-positive rate.
+Sequences pass the filter if a given proportion of their $k$-mers have a multiplicity greater than a given threshold.
+Here, the solidity threshold was set at 2 observations (`-C 2`) with a required proportion of $0.8$ (`-P 0.8`).
+Filtering for solid sequences reduces the number of erroneous $k$-mers and is a common simplification tactic for compaction and assembly.
+Here, we make several observations: first, that solidity filtering drastically reduces the number of components and unique $k$-mers in the assembly graph; second, that it helps alleviate the number of nodes connected to a single, large component often observed in RNA-seq samples, particularly in those with Poly-A selection; and third, that the slopes of the component unique $k$-mer accumulation are increasingly flattened and demonstrate more "saturation" behavior when compared to raw sequence.
+The latter observation can be explained by both the removal of single-occurrence $k$-mers introduced by sequencing error and the domination of RNA-seq samples by very low-abundance sequence.
+
 
 ## Conclusions{#cdbg-conclusions}
 
