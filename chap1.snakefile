@@ -12,7 +12,7 @@ import os
 import matplotlib.pyplot as plt
 plt.switch_backend('Agg')
 
-from ficus import FigureManager
+from ficus import FigureManager, SubFigureManager
 import ijson
 import matplotlib as mpl
 import numpy as np
@@ -30,41 +30,11 @@ TXOMIC_URLS = build_sample_urls(TXOMIC_SAMPLES)
 
 #print('Chapter One Txomic Accessions: ', ' '.join(TXOMIC_SAMPLES.index.unique()))
 
-
-@mpl.ticker.FuncFormatter
-def numerize_fmtr(x, pos):
-    return numerize.numerize(x)
-
-
-def get_diffs(df):
-    return pd.DataFrame({'d_t': df['elapsed_s'][1:].values - df['elapsed_s'][:-1].values,
-                         'd_bytes': df['bytes_read'][1:].values - df['bytes_read'][:-1].values,
-                         't': df['elapsed_s'][1:]})
-
-
-def normalize_metrics(data):
-    data['t_norm'] = data['t'] / data['t'].max()
-
-    cdbg_cols =['n_full', 'n_tips', 'n_islands', 'n_trivial', 'n_circular']
-    for col in cdbg_cols:
-        data[col + '_p'] = data[col] / data['n_unodes']
-    data['dnode_p'] = data['n_dnodes'] / (data['n_unodes'] + data['n_dnodes'])
-    data['kmer_p'] = data['n_unique_kmers'] / data['n_unique_kmers'].max()
-    prop_cols = [col + '_p' for col in cdbg_cols] + [ 'kmer_p']
-    
-    return data, prop_cols
-
-
-def parse_components_metrics(fp):
-    backend = ijson.get_backend('yajl2')
-    metrics = []
-    #sizes = []
-    for row in backend.items(fp, 'item'):
-        metrics.append({k: row[k] for k in set(row.keys()) - set(('sizes',))})
-        #sizes.append(sorted(row['sizes']))
-    metrics_df = pd.DataFrame(metrics)
-    #sizes_df = pd.DataFrame(sizes, index=metrics_df.index)
-    return metrics_df
+######################
+#
+# Data Generation
+#
+######################
 
 
 rule download_stream_cdbg_build:
@@ -244,19 +214,160 @@ rule all_dbg_stream_baseline:
                 accession = TXOMIC_SAMPLES.index.unique())
 
 
+######################
+#
+# Figure Generation
+#
+######################
+
+@mpl.ticker.FuncFormatter
+def numerize_fmtr(x, pos):
+    return numerize.numerize(x)
+
+
+def get_diffs(df):
+    return pd.DataFrame({'d_t': df['elapsed_s'][1:].values - df['elapsed_s'][:-1].values,
+                         'd_bytes': df['bytes_read'][1:].values - df['bytes_read'][:-1].values,
+                         't': df['elapsed_s'][1:]})
+
+
+def despine(*args, **kwargs):
+    for ax in args:
+        sns.despine(ax=ax, offset=10, trim=True, **kwargs)
+        ax.yaxis.grid(ls='--')
+
+
+def sample_desc(sample_name, metadata, n_reads=None):
+    sample_meta = metadata.loc[sample_name]
+    species = ' '.join((f'$\it{{{w}}}$' for w in sample_meta.scientific_name.split()))
+    n_reads = numerize.numerize(sample_meta.read_count) if n_reads is None \
+              else numerize.numerize(int(n_reads))
+        
+    return f'{species} ({sample_name}, {n_reads} {sample_meta.library_strategy} {sample_meta.library_selection} reads)'
+
+
+def normalize_metrics(data):
+    data['t_norm'] = data['t'] / data['t'].max()
+
+    cdbg_cols =['n_full', 'n_tips', 'n_islands', 'n_trivial', 'n_circular']
+    for col in cdbg_cols:
+        data[col + '_p'] = data[col] / data['n_unodes']
+    data['dnode_p'] = data['n_dnodes'] / (data['n_unodes'] + data['n_dnodes'])
+    data['kmer_p'] = data['n_unique_kmers'] / data['n_unique_kmers'].max()
+    prop_cols = [col + '_p' for col in cdbg_cols] + [ 'kmer_p']
+    
+    return data, prop_cols
+
+
+def parse_components_metrics(fp):
+    backend = ijson.get_backend('yajl2')
+    metrics = []
+    #sizes = []
+    for row in backend.items(fp, 'item'):
+        metrics.append({k: row[k] for k in set(row.keys()) - set(('sizes',))})
+        #sizes.append(sorted(row['sizes']))
+    metrics_df = pd.DataFrame(metrics)
+    #sizes_df = pd.DataFrame(sizes, index=metrics_df.index)
+    return metrics_df
+
+
+def get_cdbg_comps_df():
+    files = sorted(glob.glob('results/chap1/cdbg-build/*/goetia.cdbg.components.json'))
+    
+    comps_df = []
+    for f in files:
+        print(f)
+        try:
+            with open(f) as fp:
+                mdf = parse_components_metrics(fp)
+                mdf['t_norm'] = mdf['t'] / mdf['t'].max()
+                comps_df.append(mdf)
+        except ijson.IncompleteJSONError:
+            print(f'JSON error in {f}')
+            pass
+    comps_df = pd.concat(comps_df).reset_index(drop=True)
+    comps_df['log_n_components'] = np.log(comps_df['n_components'])
+    return comps_df
+
+
+def get_cdbg_build_metrics():
+
+    files = sorted(glob.glob('results/chap1/cdbg-build/*/goetia.cdbg.stats.json'))
+    samples = set([f.split('/')[4] for f in files])
+    
+    metrics_df = []
+    for f in files:
+        print(f)
+        try:
+            df = pd.read_json(f)
+            df, prop_cols = normalize_metrics(df)
+        except ValueError:
+            pass
+        else:
+            #df['t_norm'] = df['t'] / df['t'].max()
+            metrics_df.append(df)
+    metrics_df = pd.concat(metrics_df).reset_index(drop=True)
+    
+    return metrics_df
+
+
+def get_solid_cdbg_build_metrics():
+
+    files = sorted(glob.glob('results/chap1/solid-cdbg-build/*/goetia.cdbg.stats.json'))
+    samples = set([f.split('/')[4] for f in files])
+    
+    metrics_df = []
+    for f in files:
+        print(f)
+        try:
+            df = pd.read_json(f)
+            df, prop_cols = normalize_metrics(df)
+        except ValueError:
+            pass
+        else:
+            df['t_norm'] = df['t'] / df['t'].max()
+            metrics_df.append(df)
+    metrics_df = pd.concat(metrics_df).reset_index(drop=True)
+    metrics_df['sample_name'] = metrics_df['sample_name'].str.partition('.')[0]
+    
+    return metrics_df
+
+
+def get_solid_cdbg_comps_df():
+    files = sorted(glob.glob('results/chap1/solid-cdbg-build/*/goetia.cdbg.components.json'))
+    
+    comps_df = []
+    for f in files:
+        print(f)
+        try:
+            with open(f) as fp:
+                mdf = parse_components_metrics(fp)
+                mdf['t_norm'] = mdf['t'] / mdf['t'].max()
+                comps_df.append(mdf)
+        except ijson.IncompleteJSONError:
+            print(f'JSON error in {f}')
+            pass
+    comps_df = pd.concat(comps_df).reset_index(drop=True)
+    comps_df['log_n_components'] = np.log(comps_df['n_components'])
+    comps_df['sample_name'] = comps_df['sample_name'].str.partition('.')[0]
+    return comps_df
+
+
 rule chap_one_results_figure_one:
     output:
         'index/figure/chap1/chap1-results-dl-build-speed.png'
+    params:
+        n_samples = 8
     run:
         import matplotlib.pyplot as plt
         plt.switch_backend('Agg')
         import random
 
         files = sorted(glob.glob('results/chap1/SAM*.curl.txt'))
-        samples = set([os.path.basename(f).split('.')[0] for f in files])
+        samples = list(set([os.path.basename(f).split('.')[0] for f in files]))
 
         stream_df = []
-        for accession in samples:
+        for accession in samples[:params.n_samples]:
             print(f'Reading {accession}...')
             left_fn = f'results/chap1/{accession}.1.curl.txt'
             right_fn = f'results/chap1/{accession}.2.curl.txt'
@@ -314,7 +425,7 @@ rule chap_one_results_figure_two:
         metrics_df['sample_name'] = metrics_df.sample_name.str.rpartition('.')[0]
 
         with sns.axes_style("ticks"), \
-             FigureManager(filename=output[0], tight_layout=True, figsize=(12,8)) as (fig, ax):
+             FigureManager(filename=output[0], figsize=(12,8)) as (fig, ax):
             
             sns.lineplot(data=metrics_df, x='t_norm', y='dnode_p', hue='sample_name', lw=1, ax=ax)
             ax.set_ylabel('Decision Node Proportion')
@@ -354,7 +465,6 @@ rule chap_one_results_figure_three:
         with sns.axes_style("ticks"), \
              FigureManager(filename=output[0],
                            figsize=(8,12),
-                           tight_layout=True, 
                            nrows=len(files)//2,
                            ncols=2) as (fig, axs):
             
@@ -441,3 +551,71 @@ rule chap_one_results_figure_four:
             sns.despine(ax=axs[1], offset=10, trim=True)
             axs[1].yaxis.grid(ls='--')
             axs[1].yaxis.set_major_formatter(numerize_fmtr)
+
+
+rule chap_one_results_figure_five:
+    output:
+        'index/figure/chap1/chap1-results-solid-human.png'
+    run:
+        import matplotlib.pyplot as plt
+        plt.switch_backend('Agg')
+        from matplotlib.lines import Line2D
+
+        raw_cdbg_metrics_df = get_cdbg_build_metrics()
+        raw_comps_df = get_cdbg_comps_df()
+
+        solid_cdbg_metrics_df = get_solid_cdbg_build_metrics()
+        solid_comps_df = get_solid_cdbg_comps_df()
+
+        raw_cdbg_metrics_df['prefilter'] = 'raw'
+        raw_comps_df['prefilter'] = 'raw'
+
+        solid_cdbg_metrics_df['prefilter'] = 'solid'
+        solid_comps_df['prefilter'] = 'solid'
+
+        prefilter_metrics_df = pd.concat((raw_cdbg_metrics_df, solid_cdbg_metrics_df)).reset_index(drop=True)
+        prefilter_comps_df = pd.concat((raw_comps_df, solid_comps_df)).reset_index(drop=True)
+
+        samples = TXOMIC_SAMPLES.query('scientific_name == "Homo sapiens"').index
+
+        with sns.axes_style("ticks"), \
+             SubFigureManager(filename=output[0],
+                              figsize=(12,len(samples) * 4),  
+                              subfigs='row',
+                              nrows=len(samples), 
+                              ncols=3) as (fig, subfigs, subaxes):
+            
+            for row, (sample_name, subfig, subax) in enumerate(zip(samples, subfigs, subaxes)):
+                lax, cax, rax = subax
+                df = prefilter_comps_df.query(f'sample_name == "{sample_name}"')
+                mdf = prefilter_metrics_df.query(f'sample_name == "{sample_name}"')
+
+                subfig.suptitle(sample_desc(sample_name, TXOMIC_SAMPLES, n_reads=mdf['seq_t'].max()))
+                
+                sns.lineplot(data=df, x='t_norm', y='n_components', hue='prefilter', legend=False, lw=2, ax=lax)
+                lax.set_ylabel('Components')
+                lax.set_xlabel('Normalized Position in Stream')
+
+                sns.lineplot(data=df, x='t_norm', y='max', hue='prefilter', legend=False, lw=2, ax=cax)
+                cax.set_ylabel('Max Component Size')
+                cax.set_xlabel('Normalized Position in Stream')
+                
+                sns.lineplot(data=mdf, x='t_norm', y='n_unique_kmers', hue='prefilter', lw=2, ax=rax)
+                rax.set_ylabel('Unique $k$-mers')
+                rax.set_xlabel('Normalized Position in Stream')
+                
+                rax.legend(bbox_to_anchor=(1.05, .5), loc='center left', title='Sequence Prefilter')
+
+                despine(lax, cax, rax)
+                lax.yaxis.set_major_formatter(numerize_fmtr)
+                cax.yaxis.set_major_formatter(numerize_fmtr)
+                rax.yaxis.set_major_formatter(numerize_fmtr)
+
+
+rule all_figures:
+    input:
+        rules.chap_one_results_figure_one.output,
+        rules.chap_one_results_figure_two.output,
+        rules.chap_one_results_figure_three.output,
+        rules.chap_one_results_figure_four.output,
+        rules.chap_one_results_figure_five.output,
