@@ -220,6 +220,7 @@ rule all_dbg_stream_baseline:
 #
 ######################
 
+
 @mpl.ticker.FuncFormatter
 def numerize_fmtr(x, pos):
     return numerize.numerize(x)
@@ -237,13 +238,16 @@ def despine(*args, **kwargs):
         ax.yaxis.grid(ls='--')
 
 
-def sample_desc(sample_name, metadata, n_reads=None):
+def sample_desc(sample_name, metadata, n_reads=None, primary='species', multiline=False):
     sample_meta = metadata.loc[sample_name]
     species = ' '.join((f'$\it{{{w}}}$' for w in sample_meta.scientific_name.split()))
-    n_reads = numerize.numerize(sample_meta.read_count) if n_reads is None \
-              else numerize.numerize(int(n_reads))
-        
-    return f'{species} ({sample_name}, {n_reads} {sample_meta.library_strategy} {sample_meta.library_selection} reads)'
+    n_reads = numerize.numerize(sample_meta.read_count) if n_reads is None else numerize.numerize(int(n_reads))
+    div = '\n' if multiline else ''
+    
+    if primary == 'species':
+        return f'{species} {div}({sample_name}, {n_reads} {sample_meta.library_strategy} {sample_meta.library_selection} reads)'
+    else:
+        return f'{sample_name} {div}({n_reads} {sample_meta.library_strategy} {sample_meta.library_selection} reads)'
 
 
 def normalize_metrics(data):
@@ -311,6 +315,30 @@ def get_cdbg_build_metrics():
     return metrics_df
 
 
+def get_cdbg_frag_df():
+    files = sorted(glob.glob('results/chap1/cdbg-build/*/goetia.cdbg.unitigs.bp.json'))
+    
+    frag_df = []
+    for f in files:
+        print(f)
+        try:
+            fdf = pd.read_json(f)
+            fdf['t_norm'] = fdf['t'] / fdf['t'].max()
+            frag_df.append(fdf)
+        except ValueError as e:
+            print(f'Error reading {f}: {e}')
+            pass
+    frag_df = pd.concat(frag_df).reset_index(drop=True)
+    return frag_df
+
+
+def convert_frag_to_proportion(input_df):
+    bin_names = ['[31,50)', '[50,100)', '[100,200)', '[200,400)', '[400,800)', '[800,Inf)']
+    output_df = input_df.copy()
+    output_df[bin_names] = output_df[bin_names].div(output_df[bin_names].sum(axis=1), axis='rows')
+    return output_df
+
+
 def get_solid_cdbg_build_metrics():
 
     files = sorted(glob.glob('results/chap1/solid-cdbg-build/*/goetia.cdbg.stats.json'))
@@ -351,6 +379,24 @@ def get_solid_cdbg_comps_df():
     comps_df['log_n_components'] = np.log(comps_df['n_components'])
     comps_df['sample_name'] = comps_df['sample_name'].str.partition('.')[0]
     return comps_df
+
+
+def get_solid_cdbg_frag_df():
+    files = sorted(glob.glob('results/chap1/solid-cdbg-build/*/goetia.cdbg.unitigs.bp.json'))
+    
+    frag_df = []
+    for f in files:
+        print(f)
+        try:
+            fdf = pd.read_json(f)
+            fdf['t_norm'] = fdf['t'] / fdf['t'].max()
+            frag_df.append(fdf)
+        except ValueError as e:
+            print(f'Error reading {f}: {e}')
+            pass
+    frag_df = pd.concat(frag_df).reset_index(drop=True)
+    frag_df['sample_name'] = frag_df['sample_name'].str.partition('.')[0]
+    return frag_df
 
 
 rule chap_one_results_figure_one:
@@ -473,9 +519,7 @@ rule chap_one_results_figure_three:
             for i, sample_name in enumerate(comps_df.sample_name.unique()):
                 ax = axs[i // 2, i % 2]
             
-                #mdf = comps_df.query('sample_name == "SAMN09758735"')
                 mdf = comps_df.query(f'sample_name == "{sample_name}"')
-                #df = mdf.reset_index().melt(value_vars=['min', 'max', 'n_components'], id_vars=['sample_name', 't'])
                 g = sns.lineplot(data=mdf, x='t_norm', y='n_components', lw=2, color=sns.color_palette()[0], ax=ax)
                 sax = g.axes.twinx()
                 sns.lineplot(data=mdf, x='t_norm', y='max', lw=2, color=sns.color_palette()[1], ax=sax)
@@ -616,6 +660,138 @@ rule chap_one_results_figure_five:
                 rax.yaxis.set_major_formatter(numerize_fmtr)
 
 
+rule chap_one_results_figure_six:
+    output:
+        'index/figure/chap1/chap1-results-human-frag-and-metrics.png'
+    run:
+        import matplotlib.pyplot as plt
+        plt.switch_backend('Agg')
+        from matplotlib.lines import Line2D
+
+        metrics_df = get_cdbg_build_metrics()
+        frag_df = get_cdbg_frag_df()
+        prop_frag_df = convert_frag_to_proportion(frag_df).melt(id_vars=['sample_name', 't', 't_norm'], var_name='Unitig Length Bin')
+        frag_df = frag_df.melt(id_vars=['sample_name', 't', 't_norm'], var_name='Unitig Length Bin')
+
+        human  = TXOMIC_SAMPLES.query('scientific_name == "Homo sapiens"').index
+
+        with sns.axes_style("ticks"), \
+             SubFigureManager(filename=output[0],
+                              subfigs='col',
+                              ncols=len(human),
+                              nrows=2,
+                              subplot_kwds=dict(sharex=True),
+                              figsize=(12,8)) as (fig, subfigs, subaxes):
+            
+            for i, (sample_name, subfig, subax) in enumerate(zip(human, subfigs, subaxes)):
+                tax, bax = subax
+                legend = True if i == len(human) - 1 else False
+                
+                fdf = prop_frag_df.query(f'sample_name == "{sample_name}"')
+                mdf = metrics_df.query(f'sample_name == "{sample_name}"')[['t', 't_norm', 'seq_t', 'n_full', 'n_tips', 'n_islands', 'n_dnodes']]
+                n_reads = mdf['seq_t'].max()
+                mdf = mdf.melt(id_vars=['t', 't_norm', 'seq_t'], var_name='Node Type', value_name='Unitig Count')
+                
+                with sns.color_palette("viridis"):
+                    sns.lineplot(data=fdf, x='t_norm', y='value',  hue='Unitig Length Bin', legend=legend, lw=1.5, ax=tax)
+                
+                sns.lineplot(data=mdf, x='t_norm', y='Unitig Count',  hue='Node Type', legend=legend, lw=1.5, ax=bax)
+                bax.set_xlabel('Normalized Position in Stream')
+                
+                if i == 0:
+                    tax.set_ylabel('Proportion of Unitigs in Bin')
+                else:
+                    tax.set_ylabel('')
+                    bax.set_ylabel('')
+                    tax.get_yaxis().set_visible(False)
+                    
+                tax.set_ylim(ymax=1.0)
+                bax.yaxis.set_major_formatter(numerize_fmtr)
+                
+                subfig.suptitle(sample_desc(sample_name, TXOMIC_SAMPLES, primary='accession', n_reads=n_reads, multiline=True))
+            
+                if legend:
+                    tax.legend(loc='upper right', title='Unitig Length Bin')
+                    bax.legend(['Full', 'Tip', 'Island', 'Decision'])
+               
+
+rule chap_one_results_figure_seven:
+    output:
+        'index/figure/chap1/chap1-results-solid-human-frag.png'
+    run:
+        import matplotlib.pyplot as plt
+        plt.switch_backend('Agg')
+        from matplotlib.lines import Line2D
+
+        def melt_frag_df(df):
+            return df.melt(id_vars=['sample_name', 't', 't_norm'], var_name='Unitig Length Bin')
+
+        raw_frag_df = convert_frag_to_proportion(get_cdbg_frag_df())
+        solid_frag_df = convert_frag_to_proportion(get_solid_cdbg_frag_df())
+        metrics_df = get_cdbg_build_metrics()
+
+        samples = TXOMIC_SAMPLES.query('scientific_name == "Homo sapiens"').index
+        bin_names = ['[31,50)', '[50,100)', '[100,200)', '[200,400)', '[400,800)', '[800,Inf)']
+        cuts = np.linspace(0, 1, 20)
+
+        with sns.axes_style("ticks"), \
+             SubFigureManager(filename=output[0],
+                              figsize=(12,len(samples) * 4),  
+                              subfigs='row',
+                              nrows=len(samples),
+                              ncols=3) as (fig, subfigs, subaxes):
+            
+            from matplotlib.lines import Line2D
+            
+            for row, (sample_name, subfig, subax) in enumerate(zip(samples, subfigs, subaxes)):
+                lax, cax, rax = subax
+                mdf = metrics_df.query(f'sample_name == "{sample_name}"')
+                
+                solid_df = solid_frag_df.query(f'sample_name == "{sample_name}"')
+                norm_solid_df = solid_df.groupby(pd.cut(solid_df.t_norm, labels=cuts[1:], bins=cuts)).mean()
+                
+                raw_df = raw_frag_df.query(f'sample_name == "{sample_name}"')
+                norm_raw_df = raw_df.groupby(pd.cut(raw_df.t_norm, labels=cuts[1:], bins=cuts)).mean()
+                
+                diff_df = (norm_solid_df[bin_names] - norm_raw_df[bin_names]).reset_index()
+                
+                subfig.suptitle(sample_desc(sample_name, TXOMIC_SAMPLES, n_reads=mdf['seq_t'].max()))
+                
+                with sns.color_palette("hls", 7):
+                    sns.lineplot(data=melt_frag_df(raw_df),
+                                 x='t_norm',
+                                 y='value', 
+                                 hue='Unitig Length Bin', legend=False, lw=1.5, ax=lax)
+
+                    sns.lineplot(data=melt_frag_df(solid_df),
+                                 x='t_norm',
+                                 y='value', 
+                                 hue='Unitig Length Bin', legend=False, lw=1.5, ax=cax)
+
+                    sns.lineplot(data=diff_df.melt(id_vars=['t_norm'], var_name='Unitig Length Bin'),
+                                 x='t_norm',
+                                 y='value', 
+                                 hue='Unitig Length Bin', legend=True, lw=1.5, ax=rax)
+
+                lax.set_ylim(ymin=0, ymax=1.0)
+                cax.set_ylim(ymin=0, ymax=1.0)
+                rax.set_ylim(ymin=-.3, ymax=.3)
+                
+                rax.legend(bbox_to_anchor=(1.05, .5), loc='center left', title='Unitig Length Bin')
+
+                lax.yaxis.grid(ls='--')
+                cax.yaxis.grid(ls='--')
+                rax.yaxis.grid(ls='--')
+                
+                lax.set_title('Raw')
+                cax.set_title('Solid')
+                rax.set_title('Difference (Solid - Raw)')
+                
+                lax.set_xlabel('Normalized Position in Stream')
+                cax.set_xlabel('Normalized Position in Stream')
+                rax.set_xlabel('Normalized Position in Stream')
+
+
 rule all_figures:
     input:
         rules.chap_one_results_figure_one.output,
@@ -623,3 +799,5 @@ rule all_figures:
         rules.chap_one_results_figure_three.output,
         rules.chap_one_results_figure_four.output,
         rules.chap_one_results_figure_five.output,
+        rules.chap_one_results_figure_six.output,
+        rules.chap_one_results_figure_seven.output
