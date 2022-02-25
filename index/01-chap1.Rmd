@@ -353,9 +353,11 @@ include_graphics("figure/chap1/chap1-results-solid-human-frag.png")
 
 (ref:fig-chap1-solid-human-frag) **Fragmentation metrics of _Homo sapiens_ RNA-seq samples in solidity pipeline.**
 RNA-seq data was compacted in a streaming manner, first with no pre-filter, and then with the `goetia filter solid` pre-filter.
+Columns one and two show unitig length proportions of the raw and solid-filtered samples, respectively.
+The third column shows the difference between the solid and raw proportions at normalized time points: negative values here mean that solid filtering reduced the proportion at that point in the stream, and positive values mean it increased it.
 
+Fig. \@ref(fig:fig-chap1-solid-human-frag) revisits the unitig length histograms of the three human samples.
 
-Fig. \@ref(fig:fig-chap1-solid-human-frag) shows
 
 ## Conclusions{#cdbg-conclusions}
 
