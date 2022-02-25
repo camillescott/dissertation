@@ -214,7 +214,8 @@ include_graphics("figure/chap1/chap1-results-dl-build-speed.png")
 (ref:fig-chap1-dl-build-speed) **Streamed compaction data rates of various samples.**
 Paired-end samples were streamed directly from the European Nucleotide Archive (ENA) using the `curl` command.
 The data rates were measured using the `pv`  command as follows: `curl -sL [URL] | pv -tbn 2>> [RESULTS] 1>> [OUTPUT]`.
-`[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results.
+`[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results. Higher data rates correspond to higher compaction rates and better performance.
+Performance here is bottlenecked by either the download bandwidth or the compaction rate, whichever is slower.
 
 When reading sequences from the ENA using `curl`, `goetia cdbg` compacts at rates ranging from 2 to 5 MiB/s.
 These are approximately the download rates from the ENA without compaction.
