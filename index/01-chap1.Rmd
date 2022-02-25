@@ -38,11 +38,11 @@ representation in most extant assemblers; the de Bruijn graph [@myers_fragment_2
 
 In the de Bruijn graph methods, reads are broken down into substrings of length $k$, or $k$-mers, from which the unique representatives become the nodes in the graph. Edges are
 defined when nodes have $k$-mers with exact overlaps of length $k-1$; this implicit definition of edges obviates the need for explicit overlap computation, making de Bruijn graphs well-suited to deep sequence experiments with short reads (see \@ref(chap1-background-definitions)).
-While this property greatly improves the time scaling of the assembly problem, the de Bruijn graph suffers from extremely high storage requirements due to the enumeration of $k$-mers.
+While this property greatly improves the time scaling of the assembly problem, the de Bruijn graph suffers from extremely high storage requirements due to the explicit enumeration of $k$-mers.
 To address this, it is often compacted by the contraction of linear paths of non-branching $k$-mers, forming the compact de Bruin graph [@movahedi2012novo].
 
 A number of approaches for generating the compact de Bruijn Graph are already established. BCALM2 generates a compact de Bruijn Graph from short reads in parallel using ranked minimizers [@chikhi2016compacting], building on their previous work on de Bruijn graph representation and compaction [@chikhi2015representation].
-TwoPaCo generates the cDBG from a collection of previously assembled genomes using a two-pass Bloom-filter approach to eliminate candidate decision $k$-mers [@doi:10.1093/bioinformatics/btw609].
+TwoPaCo generates the cDBG from a collection of previously assembled genomes using a two-pass Bloom-filter approach to eliminate candidate decision (CTB: explain why you want to eliminate candidate decision k-mers?) $k$-mers [@doi:10.1093/bioinformatics/btw609].
 Bifrost efficiently constructs the colored cDBG using blocked Bloom filters and and minimizer indexing [@doi:10.1186/s13059-020-02135-8], while Cuttlefish uses finite-state automata to efficiently model the colored cDBG [@doi:10.1093/bioinformatics/btab309].
 Regardless of the method for generating the graph, extant approaches share a paradigm: they are off-line algorithms, algorithms which require access to the entire sample before proceeding with compaction, and make multiple passes over the data.
 In contrast, streaming (or online) algorithms view their data as a sequence of observations, and make one or fewer passes over that stream [@mcgregor_graph_2014], while semi-streaming algorithms aim for a small, constant number of passes, generally two or fewer [@feigenbaum_graph_2005].
@@ -96,6 +96,7 @@ Broadly, the underlying de Bruijn graph is implemented as a simple set.
 Sequences are broken down into constituent $k$-mers and hashed, and if a sequence contains any $k$-mers not previously observed, the cDBG is updated from the sequence.
 The minimum set of traversals is made from the new $k$-mers to find newly introduced decision $k$-mers which split existing unitigs and extensions of existing unitigs, and new unitigs are added when necessary.
 
+
 The next sections describe the compaction process and implementation in detail.
 
 ### Construction of the de Bruijn Graph
@@ -117,7 +118,7 @@ The cDBG data structure consists of two maps: first, a basic hash table of known
 
 The streaming compact de Bruijn graph can be defined by its decision $k$-mers and the $k$-mers terminating its current unitigs. While unitigs are subject to mutation throughout streaming construction (splitting and merging), decision nodes within the cDBG are never deleted once created, a property which can be exploited for construction (CTB: during graph construction?).
 
-In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in $G_{t-1}$; that is, a $k$-mer first introduced in fragment $t$. A *new decision $k$-mer* is a new $k$-mer which is also a decision $k$-mer. An *induced decision $k$-mer* is a decision $k$-mer which is not new, but became a decision $k$-mer at time $t$. A *new unitig node* is a unitig comprising only new $k$-mers. An existing unitig node is *split* when one its $k$-mers becomes an induced decision $k$-mer, and two unitig nodes are merged when a path of new $k$-mers exists between two of their tip $k$-mers. Given a sequence $s_t \in SS$, the *segments* of $s_t$ are the paths of new $k$-mers in $s_t$, terminated at existing $k$-mers and new decision $k$-mers. Now, we will define the ways in which a segment can mutate the cDBG.
+In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in $G_{t-1}$; that is, a $k$-mer first introduced in fragment $t$. A *new decision $k$-mer* is a new $k$-mer which is also a decision $k$-mer. An *induced decision $k$-mer* is a $k$-mer which is not newly introduced, but became a decision $k$-mer at time $t$. A *new unitig node* is a unitig comprising only new $k$-mers. An existing unitig node is *split* when one its $k$-mers becomes an induced decision $k$-mer, and two unitig nodes are merged when a path of new $k$-mers exists between two of their tip $k$-mers. Given a sequence $s_t \in SS$, the *segments* of $s_t$ are the paths of new $k$-mers in $s_t$, terminated at existing $k$-mers and new decision $k$-mers. Now, we will define the ways in which a segment can mutate the cDBG.
 
 ### Inserting New Sequences and Finding New Segments
 
@@ -194,7 +195,7 @@ Benchmarking was performed on a system with an AMD Ryzen 9 5900X CPU, 64GB of RA
 
 The streaming compactor is implemented in the `goetia` [@url:https://github.com/camillescott/goetia] package, which is hosted on GitHub and available under the MIT license.
 It includes implementations of several exact and probabilistic $k$-mer sets and counters, pluggable hashing methods for those counters, de Bruijn graph implementations built on top of those counters, streaming file processing and parsing utilities, and the core streaming compaction implementation.
-This functionality is implemented as a C++ library, which can be installed and linked against as a shared library via `bioconda` [@doi:10.1038/s41592-018-0046-7].
+This functionality is implemented as a C++ library, which can be installed as a shared library via `bioconda` [@doi:10.1038/s41592-018-0046-7].
 High-performance Python bindings are provided using `cppyy` [@doi:10.1109/PyHPC.2016.008], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
 Unit tests are performed using a library of pytest fixtures called the `debruijnal-enhance-o-tron` [@url:https://github.com/camillescott/debruijnal-enhance-o-tron].
 These fixtures randomly generate common assembly graph features parameterized by K, sequence lengths, and other constraints, allowing us to unit test compaction correctness in a manner similar to fuzzing.
@@ -204,7 +205,7 @@ The dBG generators in the debruijnal-enhance-o-tron are implemented as an interf
 
 A key advantage of streaming methods is the ability to bypass writing the input data to disk.
 While streaming approaches are often more computationally complex than offline approaches, particularly when exact solutions are required, they can be valuable tools for pipeline construction when scaling is less of a concern, ie, for smaller data running on serverless architectures.
-Here, we show that our streaming compaction prototype functions at speeds practical for use as a prefilter for sequences directly downloaded from a remote source; that is, we can compact sequences at a rate comensurate with the speed of many sequence archives, with disk access only occurring when writing assembly graph metrics and saving the final resulting compact dBG.
+Here, we show that our streaming compaction prototype functions at speeds practical for use as a prefilter for sequences directly downloaded from a remote source; that is, we can compact sequences at a rate commensurate with the speed of many sequence archives, with disk access only occurring when writing assembly graph metrics and saving the final resulting compact dBG.
 This prototype implementation struggles with memory scaling for large genomes, and as such, we have limited the input read data sets to samples with less than 100 million fragments.
 
 ```{r fig-chap1-dl-build-speed, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-dl-build-speed)", fig.align="center", out.width="100%"}
@@ -285,6 +286,7 @@ See \@ref(chap1-background-definitions) for definitions of all node types.
 In contrast, the two Poly-A selected samples show very few islands, while also showing distinctive peaks followed by flattening in their proportions of longer unitigs.
 Additionally, their numbers of "full" and "tip" unitigs remain highly correlated: we could expect this behavior when a bubbles are consistently being introduced to the graph, which result from sequence error in the presence of higher regional coverage.
 
+
 ```{r fig-chap1-dnode-prop, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-dnode-prop)", fig.align="center", out.width="100%"}
 include_graphics("figure/chap1/chap1-results-dnode-prop.png")
 ```
@@ -325,7 +327,7 @@ include_graphics("figure/chap1/chap1-results-txome-comps.png")
 
 Another key advantage of streaming approaches is the ability to build analysis pipelines with minimal intermediate data.
 Aside from the size of the raw reads themselves, which can be considerable, many programs output hundreds of gigabytes of intermediate files, reducing the accessibility of those methods where storage space is at a premium.
-For some analyses, streaming construction of the cDBG can avoid storing the input reads entirely: reads can be streamed directly from the SRA or ENA to streaming-enable quality control software such as Trimmomatic [@doi:10.1093/bioinformatics/btu170] or FASTX [@url:http://hannonlab.cshl.edu/fastx_toolkit/] for trimming and filtering, optionally through a pre-filer such as digital normalization [@brown_reference-free_2012; @doi:10.1371/journal.pone.0101271], and then compacted.
+For some analyses, streaming construction of the cDBG can avoid storing the input reads entirely: reads can be streamed directly from the SRA or ENA to streaming-enable quality control software such as Trimmomatic [@doi:10.1093/bioinformatics/btu170] or FASTX [@url:http://hannonlab.cshl.edu/fastx_toolkit/] for trimming and filtering, optionally through a pre-filter such as digital normalization [@brown_reference-free_2012; @doi:10.1371/journal.pone.0101271], and then compacted.
 To support these workflows, `goetia` implements a set of streaming filters: currently, a solidity filter which passes through reads with a set proportion of their $k$-mers with counts over a solid threshold, and a reimplementation of digital normalization using our library's efficient sequence parsing and storage backends.
 
 ```{r fig-chap1-solid-human, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-solid-human)", fig.align="center", out.width="100%"}
