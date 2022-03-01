@@ -13,7 +13,10 @@ Russell Y. Neches and Camille Scott
 \end{description}
 \end{sizepar}
 
-
+SuchTree was a project that grew out of Russell Neches's frustration with the scaleabiltiy of extant phylogenetic tree libraries.
+At the time, we were collaborating and coworking quite often, which naturally ended up with me helping writing the software.
+SuchTree is a prime example of the openness and accessibility goals of dammit, while also conforming to UNIX principles of software development: it does a handful of tasks, very efficiently, in a way that can be easily composed with other tools in its ecosystem.
+The library was published in JOSS at the above referenced DOI.
 
 ## Summary
 

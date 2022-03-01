@@ -34,6 +34,14 @@ Camille Scott and N. Tessa Pierce
 \end{description}
 \end{sizepar}
 
+dammit was a project that grew out of work from early on in my PhD on de novo RNA-seq assembly of the sea lamprey, *Petromyzon marinus*.
+The project eventually lead to a publication making use of version of the resulting transcripts and annotations [@doi:doi.org/10.1186/s12864-015-1677-z], though a publication concerning the re-assembly itself was abandoned.
+Being somewhat unsatisfied that the project did not produce a first-author publication, and having produced a significant amount of code for munging annotations, I decided to put it together into a piece of software, that I somewhat affectionately named dammit as a nod to the many inherent irritations involved in downstream sequence analysis.
+Some weeks into putting the software together, and close to a useable prototype, a Friend Of The Lab who will go unnamed tweeted the project's GitHub page and suggested people use it, resulting in a userbase and the necessity to maintain it.
+Eventually, it was used in a number of projects, and another member of the lab, N. Tessa Pierce, took on some work in maintenance and improvement.
+With an established userbase and some difficulties with the underlying workflow system, we decided to rewrite a version 2.0 of the project using Snakemake.
+Considering the amount of work that went into writing and maintaining the software, and its apparent usefulness to some in the community, I decided to include it as part of this dissertation.
+
 ## Abstract
 
 dammit is a automated de novo transcriptome annotation pipeline designed with the express purpose of being easy to install and configure.

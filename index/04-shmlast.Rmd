@@ -14,7 +14,11 @@ Camille Scott
 \end{description}
 \end{sizepar}
 
-
+shmlast originally grew out of the dammit annotation project.
+Primarily, it aims to reimplement Conditional Reciprocal Best Hits algorithm, using the python data science ecosystem and the efficient LAST aligner.
+It also includes the classic Reciprocal Best Hits algorithm, which seems often-implemented in hacky scripts that ride along with various annotation projects, but rarely implemented in standalone, maintained software.
+It was originally a component of dammit, but the program has clear use as a standalone tool, and so was separated into its own project.
+The program was published in JOSS at the above referenced DOI.
 
 ## Summary
 
