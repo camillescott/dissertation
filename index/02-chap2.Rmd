@@ -24,7 +24,46 @@ In particular, we can directly explore architecture as a function of coverage by
 
 ### Streaming Sketches
 
+
+
 ### The Draff Sketch
+
+The `draff` sketch is, in brief, a fixed-length vector where each position corresponds to the number of unique $W$-mers from a sequence sample that map to a $k$-mer in a Universal $k$-mer hitting set $UHS(W,k)$.
+The universal $k$-mer hitting set (UHS) is a set of $k$-mers from an alphabet $\Sigma$ where any possible sequence of length $W$ over $\Sigma$ must contain a $k$-mer from the set [@doi:10.1371/journal.pcbi.1005777].
+Universal $k$-mer hitting sets are an improvement over classic minimizer schemes, in that they are pre-computed and hence fixed-length any set of input sequences, and that they are smaller than minimizer schemes over the same $W$ and $k$.
+The `draff` sketch takes advantage of this fixed-length property to produce compressed representations that are comparable between samples.
+Each $k$-mer in the set is assigned a position in the sketch vector and a storage backend; the backend can be any $k$-kmer data structure that can count unique members, with our reference implementation supporting exact sets, Bloom filters, and HyperLogLog [@doi:10.46298/dmtcs.3545] counters.
+For each sequence $s_t$ in the sequence stream $S$, each $W$-mer from $s_t$ is assigned to a $k$-mer from the hitting set, with the $k$-mer with the smallest hash value being chosen if there is more than one.
+The $W$-mer is then added to the counting backend associated with the assigned $k$-mer.
+The sketch vector is computed by querying the number of unique $W$-mers associated with each $k$-mer in the UHS.
+
+The size of the sketch depends on the parameters $W$ and $k$.
+Sketches built from a larger underlying UHS (which will be those with larger values of $k$) will have a higher resolution; that is, were theoretical hitting sets be developed with values up to $W = k$, the resulting sketch would converge to a bit vector with length equal to $\|\Sigma\|^W$, or in other words, a position for every $W$-mer.
+Practical values of $k$ for which we have precomputed hitting sets are $k = \{7,8,9,10\}$ with $W$ values up to 200.
+
+$W$-mers and $k$-mers are hashed simultaneously using a rolling hash scheme [@lemire2010recursive].
+To efficiently track the minimum $k$-mer for determining a hitting $k$-mer, we use an ascending minima scheme [@url:https://people.cs.uct.ac.za/~ksmith/articles/sliding_window_minimum.html].
+When using full set backends such as the Bloom filter or exact sets, the data structure is a partitioned de Bruijn Graph; this partitioning scheme also allows for straightforward multithreading support.
+
+### Timing and Distance Metrics
+
+As our methods rely on measuring changes in our underlying sketches throughout a stream, robustly determining when and how to make these measurements is fundamental.
+The fundamental unit of time in our framework is the observed $k$-mer: time $t$ is incremented for each $k$-mer in the stream.
+As such, a single sequence fragment $s$ covers an $\texttt{len}(s) - K + 1$-length time window in the stream.
+Using $k$-mers instead of sequences makes time deltas comparable between samples with different sequence lengths and input sequences over varying size, for example, those that have been subjected to quality or abundance trimming.
+Timing of distance measurements and windowed operations is performed at a parameterized frequency interval $I$.
+The time $t$ is compared to the previous recorded time $t_p$; when $t - t_p \geq I$, the queued measurement operations are performed and $t_p$ is set to $t$.
+The implementation of this system is done at the parsing level.
+When a new sequence $s_i \in S$ is parsed, and its $k$-mers consumed by the underlying analyzer (sketch, dBG, filter, compactor, or otherwise), $t$ is incremented by $\texttt{len}(s) - K + 1$ and the prior comparison made.
+If $I$ is exceeded, parsing yields to metrics operations.
+In this system, the actual length of measurement deltas will differ from $I$ by some positive value $\epsilon$; however,
+$I \gg L$, generally exceeding $500,000$, so $\varepsilon$ is trivial.
+Excepting a small $\varepsilon$ allows sequence consumers to benefit from the entire connected path of $k$-mers from a fragment $s$ when necessary.
+
+Let the time points corresponding to these intervals be referred to as $i_0 \ldots i_j \ldots i_N$, where $N$ is the $k$-mer time length of the stream, and the sketch associated with these time points as $A_0 \ldots A_j \ldots A_N$.
+During streaming sketching, the distance functions $\delta ( A_j, A_{j+1} )$ are called between sketches at successive intervals, and the result $d_j$ added to the distance list $\Delta = \{ d_0 \ldots d_j \ldots d_N \}$.
+When our sketch is a `sourmash` Min-hash sketch, $\delta$ is $1 - Jaccard$, where $Jaccard$ is the Jaccard similarity.
+For the `draff` sketch, $\delta$ can be any standard distance function: we commonly use the Euclidean, cosine, correlation, and Canberra [@doi:10.1093/comjnl/9.1.60] distances.
 
 ## Results
 

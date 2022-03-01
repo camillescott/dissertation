@@ -52,10 +52,9 @@ Here, we explore an implementation of a streaming de Bruijn graph compactor. Our
 
 ### Definitions {#chap1-background-definitions}
 
-For some string $s$, let $s[i]$ be the symbol at position $i$, $0$-indexed, and $s[i:j]$ be the substring of $s$ starting at position $i$ and not including position $j$. 
+For some string $s$, let $s[i]$ be the symbol at position $i$, $0$-indexed, $s[i:j]$ be the substring of $s$ starting at position $i$ and not including position $j$, and $\texttt{len}(s)$ be the length of $s$. 
 If $s$ has length $L$, the $k$-mers of $s$ are given by $\texttt{kmers}(s) = \{s[i:i+k] \mid 0 \le i < L-k+1 \}$ ; that is, all length $k$ substrings of $s$.
-Let $\texttt{pre}(s)=u[0:k-1]$ and $\texttt{suf}(s)=s[L-k+1:L]$, that is, they yield the suffix and prefix of $s$.
-When $s$ is over the alphabet $\Sigma=\{A,C,G,T\})$, we call $s$ a "read" or "sequence".
+Let $\texttt{pre}(s)=s[0:k-1]$ and $\texttt{suf}(s)=s[L-k+1:L]$, that is, they yield the suffix and prefix of $s$.
 
 We then define a de Bruijn graph as $G_{k, \Sigma} = (N,E)$, where $N$ is a set of $k$-mers over alphabet $\Sigma$ and $E$ is the set of length $k$-1 exact overlaps between $k$-mers in $N$; that is, $E = \{e_{u \rightarrow v} \mid \texttt{suf}(u) = \texttt{pre}(v) \forall u,v \in N \}$. For convenience, assume $\Sigma=\{A,C,G,T\})$.
 
