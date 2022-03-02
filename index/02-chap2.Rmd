@@ -22,10 +22,6 @@ In particular, we can directly explore architecture as a function of coverage by
 
 ## Methods {#chap2-methods}
 
-### Streaming Sketches
-
-
-
 ### The Draff Sketch
 
 The `draff` sketch is, in brief, a fixed-length vector where each position corresponds to the number of unique $W$-mers from a sequence sample that map to a $k$-mer in a Universal $k$-mer hitting set $UHS(W,k)$.
@@ -44,6 +40,18 @@ Practical values of $k$ for which we have precomputed hitting sets are $k = \{7,
 $W$-mers and $k$-mers are hashed simultaneously using a rolling hash scheme [@lemire2010recursive].
 To efficiently track the minimum $k$-mer for determining a hitting $k$-mer, we use an ascending minima scheme [@url:https://people.cs.uct.ac.za/~ksmith/articles/sliding_window_minimum.html].
 When using full set backends such as the Bloom filter or exact sets, the data structure is a partitioned de Bruijn Graph; this partitioning scheme also allows for straightforward multithreading support.
+
+### Streaming Sketches
+
+For comparison, we make use of the MinHash sketch for genomics [@doi:10.1186/s13059-016-0997-x] as implemented in the `sourmash` package [@doi:10.21105/joss.00027], as well as the FracMinHash sketch further built on in `sourmash` [@doi:10.1101/2022.01.11.475838].
+MinHash sketching is related to shingling and minimizer schemes.
+For some sketch size $N$, length $k$, and random hash function $f$, the $k$-mers from sequences $s_t \in S$ of a sequence stream are hashed with $f$ and the $N$ hashes with lowest value kept; hence, these methods are sometimes referred to as bottom sketches.
+The resulting set of size $N$ is the MinHash sketch, and sketches can be compared to each other with the Jaccard similarity methods.
+The closely related FracMinHash extends MinHash to non-fixed sizes.
+Instead of keeping the bottom $N$ hashes, a cutoff hash value proportional to the size of the hash space is chosen, and all hash values less than this cutoff are kept.
+Thus, the FracMinHash grows in proportion to the input data, and represents a random sample of $k$-mers with probability of the cutoff value divided by the maximum hash value.
+While this means FracMinHashes have unbounded growth, it also allows implementation of additional operations such as containment queries.
+
 
 ### Timing and Distance Metrics
 
@@ -64,6 +72,8 @@ Let the time points corresponding to these intervals be referred to as $i_0 \ldo
 During streaming sketching, the distance functions $\delta ( A_j, A_{j+1} )$ are called between sketches at successive intervals, and the result $d_j$ added to the distance list $\Delta = \{ d_0 \ldots d_j \ldots d_N \}$.
 When our sketch is a `sourmash` Min-hash sketch, $\delta$ is $1 - Jaccard$, where $Jaccard$ is the Jaccard similarity.
 For the `draff` sketch, $\delta$ can be any standard distance function: we commonly use the Euclidean, cosine, correlation, and Canberra [@doi:10.1093/comjnl/9.1.60] distances.
+
+
 
 ## Results
 
