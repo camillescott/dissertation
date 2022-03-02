@@ -134,4 +134,5 @@ dependencies:
   - pip
   - pip:
     - manubot
+    - git+https://github.com/manubot/manubot.git#egg=manubot
     - panflute==1.12.5

@@ -32,58 +32,6 @@ What started as a small-scale molecular biology method for understanding individ
 
 ## Background
 
-* Sequencing technology
-    * Second-gen HTS: illumina
-    * Long read tech: pacbio
-    * Real-time sequencing: nanopore
-* Streaming Algorithms
-    * Advantages
-        * Implied dynamic data structures
-        * Disk space efficiency
-        * Removal of intermediate output
-        * Infinite-size data
-        * Real-time analysis
-
-* de Bruijn Graphs
-    * Representations
-        * Offline
-    * Tagging / partitioning
-        * Why
-            * seeding for traversal
-            * alignment-free comparison
-            * locking / parallel construction
-            * sparse-graph construction
-        * Greedy k-mer subset (khmer, SparseAssembler)
-        * (W,K) Minimizers
-        * r-dom sets
-        * Universal k-mer hitting sets
-    * Implementations: offline
-        * So many k-mer counters
-        * GATB
-        * So many assemblers: AbySS, velvet, IDBA, megahit, ALLPATHS
-    * Implementations: streaming
-        * khmer/oxli
-* compact de Bruijn graphs
-    * Implementations: offline
-        * BCALM
-        * TwoPaCo
-        * As components of assemblers: Abyss, etc
-    * Implementations: semi-streaming
-        * Faucet
-        * LightAssembler
-* saturation
-    * Definitions of saturation
-        * Accumulation of information vs error
-        * by minimizing fragmentation
-        * by coverage profile
-        * by completeness: gene content, etc (BUSCO)
-    * By context
-        * Genomic vs txomic vs mtomic
-        * downstream goals: assembly, classifcation, abundance
-* Sketching
-
-
-
 ### Streaming Algorithms
 
 Streaming, or online, algorithms are those that process data in the *stream model*: a stream of data is fed to the algorithm, one observation at a time in the order of arrival, and each item is processed at most once.

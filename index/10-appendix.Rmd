@@ -6,8 +6,7 @@
 If you feel it necessary to include an appendix, it goes here.
 -->
 
-
-# `goetia`
+# Appendix: The `goetia` Library and Software
 
 `goetia` is an open source software package implementing the methods described in this dissertation.
 It comprises three main components:
@@ -25,13 +24,13 @@ The C++ library is responsible for the "heavy lifting" of the package.
 To enable composibility and efficiency, it makes much use of of templating and the curiously-recurring template pattern (CRTP) to avoid virtual function calls.
 The library is organized into namespaces by purpose.
 
-### `goetia::hashing`
+## Hashing
 
 $k$-mer hashing is a core bottleneck in de Bruijn graph construction, as well as many sketching algorithms.
 Because of the centrality of hashing, many of `goetia`'s classes are parameterized by hashing method.
 Hashing capability is modularized; the basic interfaces simply accept $k$-mer sequences and produce integers, and additional, more advanced interfaces support efficient rolling hashing and neighbor-searching.
 
-#### Hash types
+### Hash types
 
 The types of hash values are templated to allow composability and flexibility.
 The core type is `Hash`, which is parametrized with a `value_type` for the underlying integer to be used.
@@ -45,7 +44,30 @@ This is parameterized by a hash type corresponding to the interface of `Hash`, a
 Related is the `Shift`: this also takes a hash type template parameter, as well as a non-type parameter of type `bool` for its direction.
 A shift stores a hash value and a single `char` symbol representing the single base from the dBG alphabet $\Sigma$ that was added to the $k-1$ suffix (or prefix) of the `Shift`'s predecessor.
 
-### `goetia::storage`
+Finally, the `Partitioned` and `Wmer` templates are used for minimizer schemes.
+A `Partitioned` models an underlying hash value with `hash_type` and an abritrary associated `uint64_t` partition ID, which may be calculated via minimizer, universal hitting set, or other methods.
+`Wmer` stores a `Hash` along with a `Partitioned` to model the hash value of a full length $W$-mer, the hash value of its associated minimizer $k$-mer, and the partitioned ID of that minimizer $k$-mer.
+
+### Hashers
+
+$W$ and $k$-mer hashing algorithms are built on a standard interface for roll hash functions useful for $k$-mer hashing.
+The foundation for this interface is the `HashShifter`, which takes as a template parameter a shift policy implementing the specific rolling hashing algorithm, and requires the following methods be defined on this policy:
+
+- `get()`: Return the current hash value.
+- `shift_right(char, char)`, `shift_left(char, char)`: Remove a character from the current state and hash in a new character.
+- `hash_base(char *)`: Hash an entire $k$-mer (set the starting state before shifting).
+- `static hash(char *)`: Statelessly hash an entire $k$-mer.
+
+`HashShifter` is also templated with an `Alphabet`, which may be one of the plain nucleotides $\{A,C,G,T\}$, called `DNA_SIMPLE`, the plain nucleotides plus $\{N\}$,  called `DNAN_SIMPLE`, and the full IUPAC defined nucleotide alphabet `IUPAC_NUCL`.
+The alphabet classes define their own validation and complementation methods.
+
+There are specialized policies for: the Lemire rolling hash algorithm, for both `Hash` and `Canonical` (ie, strand-aware and canonical $k$-mer versions), and the rolling UHS minimizer shifter, which yields `Wmer` objects with their associated hitting $k$-mers instead of plain `Hash` objects.
+
+Finally, to help build toward de Bruijn graph traversal, there is the `HashExtender` template.
+The `HashExtender` has the hash state via its parent `HashShifter` while also adding a character ring buffer to track the current $k$-mer of its hash, which we call the cursor.
+It extends the `HashShifter::shift_left` and `HashShifter::shift_right` methods to update this buffer, and also implements the `left` and `right_extensions` interfaces for generating the $\|\Sigma\|$ possible prefix or suffix neighbors of a $k$-mer.
+
+## $k$-mer Storage
 
 Storage classes implement efficient $k$-mer collections.
 All follow a base interface named `Storage`, which takes a template parameter `value_type` for the type of the hashed $k$-mers to be stored.
@@ -67,7 +89,7 @@ Collections implementing the interface also define the following traits:
 
 `goetia` provides a number of data structures implementing this interface.
 
-#### Basic Storage Classes
+### Basic Storage Classes
 
 ##### Bloom filter: `BitStorage`
 
@@ -102,23 +124,70 @@ A probabilistic sub-linear space data structure developed as a unilateral improv
 It makes use of SIMD instruction to speed up rank-and-select operations and has good cache locality, the latter a significant weakness of Bloom filters and CM sketches.
 These advantages are achieved at a considerable increase in implementation complexity.
 
-#### Partitioned Storage {#app-partitioned-storage}
+### Partitioned Storage {#app-partitioned-storage}
 
 The `PartitionedStorage` exposes the same interface as the basic `Storage`, but supports partitioning the underlying data into disjoint sets.
 The API is agnostic to the method of partitioning; all that is required is a number of partitions and an additional parameter specifying the partition in which to store an item while inserting and querying.
 The `PartitionedStorage` is template-parameterized with one of the formerly described storage classes, and a number of data structures equal to the number of partitions are constructed.
 Thus, care must be taken when using underlying storage classes with a fixed, pre-allocated amount of memory, so as to not overallocate available system memory.
-The expected  partitioning method for $k$-mers are minimizer methods, particularly the Universal $k$-mer Hitting Set (UKHS), which is implemented in the `hashing` namespace and described in the streaming sketch chapter.
+The expected  partitioning method for $k$-mers are minimizer methods, particularly the Universal $k$-mer Hitting Set (UHS), which is implemented in the `hashing` namespace and described in the streaming sketch chapter.
 
 Partitioned storage offers several advantages, at the cost of increased processing time spent on determining partitions.
 For storages with poor cache locality, an appropriately-determined partitioning methodology can reduce cache misses during query and graph traversal.
 Partitioning also allows fine-grained per-partition locking of the dBG, and thus efficient parallel algorithms.
-Both these advantages necessitate locality-sensitive partitioning methods such as minimizer and UKHS schemes.
+Both these advantages necessitate locality-sensitive partitioning methods such as minimizer and UHS schemes.
+UHS schemes used for partitioning are described in \@ref(chap2-methods).
 
-### `goetia::dbg`
+## de Bruijn Graphs
 
-### `goetia::traversal`
+The `goetia::dBG` and `goetia::PdBG` classes build on the `Storage`, `PartitionedStorage`, and hashing classes to implement functional de Bruijn graphs.
+The core `dBG` and `PdBG` interface defines:
 
-### `goetia::sketches`
+- `insert(std::string)`: to hash and add an individual $k$-mer to the graph via the underlying `Storage` class.
+- `insert_and_query(std::string)`: To add a $k$-mer and return its count post-insertion.
+- `query(std::string)`: to retrieve the current presence or count of a $k$-mer.
+- `insert_sequence(std::string`: To insert the $k$-mers of a sequence into the graph, along with a number of overloads for returning hashes, returning the set of new $k$-mers, return the vector of counts, and so on.
 
-### `goetia::`: General Utilities
+`dBG` and `PdBG` inherit the functionality of the `HashShifter`, `HashExtender`, and `UnitigWalker` classes, the latter of which is described below; hence, `dBG` also is capable of traversing itself.
+
+The `cDBG` class is templated on a `dBG` type, and hence a `HashShifter` type, and implements the storage and retrieval of unitigs in its associated de Bruijn graph.
+The `cDBG` class only manages the unitigs via their tips and the decision $k$-mers; the compacted graph is build using the `StreamingCompactor` class, which puts together all the prior functionality. Its primary public interface is simply the `insert_sequence` method, which adds a sequence to the underlying de Bruijn graph and appropriately updates the unitigs in the `cDBG` that the sequence intersects.
+
+## de Bruijn Graph Traversal
+
+The apex of the `HashShifter` and `dBG` hierarchy is the `UnitigWalker`.
+It uses the functionality of the `HashExtender` to walk a `dBG` that is bound to it and extract unitigs.
+It reports detailed state information its primary interfaces in the form of the `Walk` class, which defines:
+
+- `kmer_type start`: A `Kmer` representing the start point of the traversal.
+- `vector<Shift> path`: A vector of `Shift` representing the path taken by the traversal.
+- `TraversalState end_state`: An `enum` holding the reason a traversal was terminated.
+
+From this information, a walk can be converted to a unitig via its `to_string` method.
+`TraverState` can have the following values:
+
+- `STOP_FWD`: There was no neighbor to traverse to (in or out-degree of zero).
+- `DECISION_FWD`: Traversal stopped at a decision $k$-mer with in/out degree greater than one in the direction of traversal.
+- `DECISION_BKW`: Traversal passed through a decision $k$-mer with degree greater than one in the opposite direction of traversal, and so backed off by one $k$-mer.
+- `STOP_SEEN`: Traversal stopped because it hit a $k$-mer already seen in this traversal: ie, it formed a perfect loop.
+- `STOP_MASKED`: Traversal stopped because it hit a $k$-mer in the explicit set of provided $k$-mers to stop at.
+- `STOP_CALLBACK`: Traversal stopped because it was ordered to by a bound callback function.
+- `BAD_SEED`: Traversal did not start in the first place because the start $k$-mer was not the underlying de Bruijn graph.
+- `GRAPH_ERROR`: Some fatal error in the graph topology occurred.
+- `STEP`: Traversal was able to successfully take a step (a single neighbor in the direction of traversal with no reverse decision node).
+
+The `UnitigWalker` itself defines `filter_nodes`, which takes a list of extensions from `HashExtender` and removes those that are not in the associated graph and `in_neighbors` and `out_neighbors` to wrap `filter_nodes` with the current cursor of `HashExtender`.
+For movement around the graph, it defines:
+
+- `step_left`, `step_right`: Attempt to take a single step in the given direction, and return a resulting `TraversalState` and list of neighbors.
+- `walk_left`, `walk_right`: Repeatedly step in the given direction and continue until a stop state is reached, returning a `Walk`.
+- `walk`: Walk bidirectionally and return both walks.
+
+The `dBG` and `PdBG` classes inherit from this class as a mixin, and so all this functionality (and state) is also found on a given `dBG` object.
+`UnitigWalker` can be instantiated with an existing `dBG` or `PdBG` by passing a pointer to its constructor.
+
+## Sketches
+
+## Sequence Parsing and Processors
+
+## General Utilities
