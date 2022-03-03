@@ -6,7 +6,7 @@
 If you feel it necessary to include an appendix, it goes here.
 -->
 
-# Appendix: The `goetia` Library and Software
+# The `goetia` Library and Software
 
 `goetia` is an open source software package implementing the methods described in this dissertation.
 It comprises three main components:

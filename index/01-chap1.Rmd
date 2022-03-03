@@ -174,6 +174,30 @@ If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a nei
 	\caption{\label{fig:disturbed-dnodes}Caption describing decision nodes, references algorithm.}
 \end{figure}
 
+### Graph Metrics
+
+In order to analyze the compact de Bruijn graph during construction, we optionally gather a number of metrics during the stream.
+The counts of the unitig node types described previously (\@ref(chap1-background-definitions)) are taken whenever a CDBG mutation is performed via appropriate incrementation and decrementation atomic counters; we also track the types of mutations performed, including unitig splits, merges, extensions, clips, and deletions.
+Counts of unique $k$-mers are tracked when new $k$-mers are inserted into the dBG storage backends.
+These metrics are essentially "free" to compute, and so can be tracked with each sequence insertion.
+
+Other, more advanced metrics are more expensive, and must be taken at larger intervals for performance.
+Timing for advanced metrics is determined by a tunable $k$-mer interval, which is described in more detail in \@ref(chap2-methods-timing).
+Briefly, the fundamental unit of time is the $k$-mer, instead of the inserted sequence, to correct for varying sequence lengths, with the interval size $I$ generally set at some value much larger than the sequence length; for most results shown here, the interval is $1,000,000$ $k$-mers.
+The actual number of $k$-mers between measurements is actually $I + \varepsilon$, where $\varepsilon \leq L$, so as to insert complete sequences.
+We save the above count metrics to disk (or output stream) at every interval, as the required disk access is trivial to write a single row of JSON formatted integers.
+The two less granular metrics are the histogram of unitig lengths and the number and sizes of connected components.
+The unitig length histogram is calculated by enumerating all unitigs and incrementing the appropriate histogram counter.
+As this does not require traversal, and in the majority of cases the number of unitigs is far less than the number of unique $k$-mers, this can be done efficiently, and so is performed at a modulus of the interval count (every 5 intervals for the results shown here).
+
+Connectivity is much more resource intensive.
+First, we perform a breadth-first traversal of the complete cDBG, starting from the map of unitig ends and removing all ends in a connected component from the traversal queue until all unitigs are exhausted.
+The cDBG is, like the underlying dBG, node-centric, so finding unitig neighbors requires hashing the extensions of the $k$-mers at each unitig end.
+We then sample the sizes of all discovered components using reservoir sampling [@doi:10.1145/198429.198435], by default taking a sample of $10,000$ components.
+This operation grows in complexity with the number of nodes and edges in the cDBG, and hence with the number of unique $k$-mers in the underlying dBG, though it is at least bounded by the maximum node degree $\|\Sigma\|$.
+To account for this growth, we back off the number of intervals between traversal using the exponential growth function with $r=0.8$; that is, when the number of intervals between ticks during the stream is $\{1.08^m \| m \in 0 \ldots N\}$, where $N$ is the number of measurement occurrences.
+Because the graphs tend to converge on stable topologies later in the stream, we find that this balances measuring the interesting changes in the cDBG while being frugal with computation time.
+
 ### Analysis Parameters
 
 ```{r goetia-version, echo=FALSE, collapse=TRUE}
@@ -186,6 +210,8 @@ Results for Fig. \@ref(fig:fig-chap1-dl-build-speed), \@ref(fig:fig-chap1-dnode-
 Streaming solid filtration was performed with `goetia solid filter` `-K 31` `-S ByteStorage` `-H CanLemireShifter` `-x 2e9 -N 4` `-C 3 -P 0.8` `--pairing-mode split`.
 
 Benchmarking was performed on a system with an AMD Ryzen 9 5900X CPU, 64GB of RAM, and a SATA SSD.
+The download connection speed as measured with the `speedtest-cli` package [@url:https://github.com/sivel/speedtest-cli] is approximately 300Mbit/s (~37MiB/s), which, in our tests, is faster than the FTP download speed for FASTA files from the ENA.
+The download stream tests were performed in serial to avoid interference between test runs.
 
 
 ## Results {#chap1-results}
