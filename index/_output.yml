@@ -1,6 +1,6 @@
 output: 
   aggiedown::thesis_pdf: 
     latex_engine: xelatex
-    toc_depth: 3
+    toc_depth: 4
     pandoc_args: 
       - "--defaults=_aggiedown_pandoc.yml"
