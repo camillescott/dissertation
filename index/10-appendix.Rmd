@@ -121,7 +121,7 @@ It uses SIMD instructions for internal probing and is optionally thread-safe.
 ##### Counting Quotient Filter: `QFStorage`
 
 A probabilistic sub-linear space data structure developed as a unilateral improvement over Count-min Sketches [@doi:10.1145/3035918.3035963].
-It makes use of SIMD instruction to speed up rank-and-select operations and has good cache locality, the latter a significant weakness of Bloom filters and CM sketches.
+It makes use of SIMD instructions to speed up rank-and-select operations and has good cache locality, the latter a significant weakness of Bloom filters and CM sketches.
 These advantages are achieved at a considerable increase in implementation complexity.
 
 ### Partitioned Storage {#app-partitioned-storage}
@@ -129,7 +129,7 @@ These advantages are achieved at a considerable increase in implementation compl
 The `PartitionedStorage` exposes the same interface as the basic `Storage`, but supports partitioning the underlying data into disjoint sets.
 The API is agnostic to the method of partitioning; all that is required is a number of partitions and an additional parameter specifying the partition in which to store an item while inserting and querying.
 The `PartitionedStorage` is template-parameterized with one of the formerly described storage classes, and a number of data structures equal to the number of partitions are constructed.
-Thus, care must be taken when using underlying storage classes with a fixed, pre-allocated amount of memory, so as to not overallocate available system memory.
+Thus, care must be taken when using underlying storage classes with a fixed, pre-allocated amount of memory, so as to not over-allocate available system memory.
 The expected  partitioning method for $k$-mers are minimizer methods, particularly the Universal $k$-mer Hitting Set (UHS), which is implemented in the `hashing` namespace and described in the streaming sketch chapter.
 
 Partitioned storage offers several advantages, at the cost of increased processing time spent on determining partitions.
