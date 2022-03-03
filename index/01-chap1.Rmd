@@ -283,7 +283,6 @@ A storage backend using minimizer partitioning is included in the `goetia` libra
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
-
 Streaming construction of the cDBG intuitively enables dynamic analysis of the graph.
 Fig. \@ref(fig:fig-chap1-node-metrics) demonstrates this capability on several *Homo sapiens* transcriptomes.
 Each of the three samples shows distinct growth metrics, with the two Poly-A selected samples, on the left and right, sharing the most similarity, and the middle, high-coverage rRNA-depleted sample standing out.
@@ -355,6 +354,7 @@ Aside from the size of the raw reads themselves, which can be considerable, many
 For some analyses, streaming construction of the cDBG can avoid storing the input reads entirely: reads can be streamed directly from the SRA or ENA to streaming-enable quality control software such as Trimmomatic [@doi:10.1093/bioinformatics/btu170] or FASTX [@url:http://hannonlab.cshl.edu/fastx_toolkit/] for trimming and filtering, optionally through a pre-filter such as digital normalization [@brown_reference-free_2012; @doi:10.1371/journal.pone.0101271], and then compacted.
 To support these workflows, `goetia` implements a set of streaming filters: currently, a solidity filter which passes through reads with a set proportion of their $k$-mers with counts over a solid threshold, and a reimplementation of digital normalization using our library's efficient sequence parsing and storage backends.
 
+<!-- FIGURE: COMPONENT METRICS IN SOLIDITY PIPELINE -->
 ```{r fig-chap1-solid-human, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-solid-human)", fig.align="center", out.width="100%"}
 include_graphics("figure/chap1/chap1-results-solid-human.png")
 ```
@@ -364,16 +364,7 @@ RNA-seq data was compacted in a streaming manner, first with no pre-filter, and 
 The sequences that passed the solidity filter were piped directly into the compaction program.
 These three samples represent a variety of coverage levels and two different selection methods which play into the differences in assembly graph structure.
 
-Fig. \@ref(fig:fig-chap1-solid-human) shows the results of a small pure-streaming compaction pipeline on three human RNA-seq samples.
-These samples were run through the `goetia` streaming solidity filter with the resulting sequences piped directly into the streaming compactor.
-Briefly, the streaming solidity filter inserts the $k$-mers from input sequences into a de Bruijn graph with a Count-min Sketch backend, a fixed-memory approximate membership query (AMQ) datastructure with a known false-positive rate.
-Sequences pass the filter if a given proportion of their $k$-mers have a multiplicity greater than a given threshold.
-Here, the solidity threshold was set at 2 observations (`-C 2`) with a required proportion of $0.8$ (`-P 0.8`).
-Filtering for solid sequences reduces the number of erroneous $k$-mers and is a common simplification tactic for compaction and assembly.
-Here, we make several observations: first, that solidity filtering drastically reduces the number of components and unique $k$-mers in the assembly graph; second, that it helps alleviate the number of nodes connected to a single, large component often observed in RNA-seq samples, particularly in those with Poly-A selection; and third, that the slopes of the component unique $k$-mer accumulation are increasingly flattened and demonstrate more "saturation" behavior when compared to raw sequence.
-The latter observation can be explained by both the removal of single-occurrence $k$-mers introduced by sequencing error and the domination of RNA-seq samples by very low-abundance sequence.
-Note also how the maximum component size of the middle, rRNA-depleted sample remains on par with the two Poly-A selected samples, even while having orders of magnitude more individual components.
-
+<!-- FIGURE: UNITIG LENGTH DISTRIBUTION IN SOLIDITY PIPELINE -->
 ```{r fig-chap1-solid-human-frag, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-solid-human-frag)", fig.align="center", out.width="100%"}
 include_graphics("figure/chap1/chap1-results-solid-human-frag.png")
 ```
@@ -383,14 +374,40 @@ RNA-seq data was compacted in a streaming manner, first with no pre-filter, and 
 Columns one and two show unitig length proportions of the raw and solid-filtered samples, respectively.
 The third column shows the difference between the solid and raw proportions at normalized time points: negative values here mean that solid filtering reduced the proportion at that point in the stream, and positive values mean it increased it.
 
+Fig. \@ref(fig:fig-chap1-solid-human) shows the results of a small pure-streaming compaction pipeline on the same three human RNA-seq samples as Fig. \@ref(fig:fig-chap1-node-metrics).
+These samples were run through the `goetia` streaming solidity filter with the resulting sequences piped directly into the streaming compactor.
+Briefly, the streaming solidity filter inserts the $k$-mers from input sequences into a de Bruijn graph with a Count-min Sketch backend, a fixed-memory approximate membership query (AMQ) datastructure with a known false-positive rate.
+Sequences pass the filter if a given proportion of their $k$-mers have a multiplicity greater than a given threshold.
+Here, the solidity threshold was set at 2 observations (`-C 2`) with a required proportion of $0.8$ (`-P 0.8`).
+Filtering for solid sequences reduces the number of erroneous $k$-mers and is a common simplification tactic for compaction and assembly.
+Here, we make several observations: first, that solidity filtering drastically reduces the number of components and unique $k$-mers in the assembly graph; second, that it helps alleviate the number of nodes connected to a single, large component often observed in RNA-seq samples, particularly in those with Poly-A selection; and third, that the slopes of the component unique $k$-mer accumulation are increasingly flattened and demonstrate more "saturation" behavior when compared to raw sequence.
+The latter observation can be explained by both the removal of single-occurrence $k$-mers introduced by sequencing error and the domination of RNA-seq samples by very low-abundance sequence.
+Note also how the maximum component size of the middle, rRNA-depleted sample remains on par with the two Poly-A selected samples, even while having orders of magnitude more individual components.
+
+
 Fig. \@ref(fig:fig-chap1-solid-human-frag) revisits the unitig length histograms of the three human samples.
+In all cases, solidity filtering reduces the proportion of the shortest unitigs (those of length $k$ to length $50$) while increasing the proportion of of longer unitigs; in other words, cDBG fragmentation is reduced.
+In the rRNA-depleted sample in particular, the comparative proportion of the smallest unitigs, compared to the raw sample, reduces as the stream is consumed.
+In absolute terms (middle column), this proportion stabilizes compared to the raw sample (left column).
+We expect the proportion of length $50-100$ unitigs to drop and stabilize throughout a stream, as these are unitigs which will, when first observed, be "seeded" by individual reads -- that is, the read length is less than $100$, and further legitimate sequence within the same component should serve to either extend these unitigs linearly or split them with decision $k$-mers caused by splice variants.
+We also observe that all classes of unitigs demonstrate more stabilizing behavior, with relative proportions becoming more correlated over time, compared to their raw counterparts; the better, higher-coverage regions of the assembly graph are more dominant in solid-filtered samples, with low-coverage and erroneous sequence mostly skipped.
 
 
-## Conclusions{#cdbg-conclusions}
+## Discussion{#cdbg-conclusions}
 
-We introduce a novel streaming approach for the construction of the compact de Bruijn graph
+We introduce a novel streaming approach for the construction of the compact de Bruijn graph.
+We describe that methodology of a prototype implementation of this approach which attempts to minimize graph traversals during the mutation of existing unitigs, allowing for useable streaming compaction on samples of "reasonable" size.
+Our approach values avoiding disk access in particular, trading for higher memory usage; instead, we help alleviate memory constraints by enabling integration into streaming pre-filtering pipelines which help reduce the number of unique $k$-mers in a stream.
+We see two clear avenues for future work: first, on reducing memory requirements by fully embracing AMQ data structures as $k$-mer storage backends, as our reference implementation chose exact backends for simplicity; and second, enabling multithreading through the use of our partitioned storage backends, described in the appendix \@ref(app-partitioned-storage).
+AMQ backends introduce a tradeoff between accepting erroneous unitigs as a result of traversals through paths created by false-positive $k$-mers and increasing the complexity of the implementation by tracking these false positives in a streaming manner.
+We believe that the latter solution is tractable by an extra filter in the decision $k$-mer induction step, but have avoided the implementation in this work in favor of exploring dynamic assembly graph behavior.
 
-* Streaming algorithms are practically useful.
-* Streaming analysis of assembly graphs provides new insights into their structure.
-* Future applications for real-time long read technology.
-* Discussion of accessibility.
+We further show that streaming compaction allows a new suite of tools for analysing the effects of coverage and genomic complexity on assembly graph construction.
+Future work will explore sub-linear approaches to compaction making use of this saturation behavior.
+Chapter 2 dives into this property in context of streaming sketch algorithms, and provides a possible sub-linear pre-filter compaction that could be added to a pipeline including error correction, solidity filtering, and in-silico normalization.
+Streaming approaches are inherently amenable to this sort of flexibility in data processing pipelines; avoiding intermediate state, in combination with low-memory approaches enabled by sketching and AMQ methods, makes parameter sweeps that add and remove pipeline stages more tractable for the average bioinformatician.
+
+While we have focused on second-generation high-throughput sequence technologies, we believe streaming compaction could eventually find use when integrated with recent-generation single-molecule real-time (SMRT) sequence technology.
+In particular, we hope to someday explore sub-linear compaction approaches that communicate with SMRT instruments live.
+As SMRT sequencers gain marketshare and increased software tooling, research in streaming methods will necessarily need to follow in order to keep up with the data deluge and help alleviate the complexities of deploying sequencers both in the field and in clinical settings.
+We hope this work provides inspiration on what is possible with these technologies.
