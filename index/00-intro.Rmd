@@ -26,7 +26,7 @@ library(knitr)
 
 Large-scale genome sequencing is a paradigm-shifting technology for biology of the 21st century.
 Since the sequencing of the human genome was declared complete in April of 2003, genomics has been a core part of the public conscience and rapidly grown as a tool for biological research.
-What started as a small-scale molecular biology method for understanding individual genes grew into projects mapping out the genomes of all major model organisms in great functional detail, sequencing entire populations of microbes from the environment, mapping hundreds of thousands of individual human genomes, and producing draft sequences for hundreds of thousands of species across the entire tree of life; as of 2021, the National Center for Biotechnology Information (NCBI) stored over 36 petabytes of raw sequencing information in its Sequence Read Archive (SRA), with many times that volume not submitted.
+What started as a small-scale molecular biology method for understanding individual genes grew into projects mapping out the genomes of most major model organisms in great functional detail, sequencing entire populations of microbes from the environment, mapping hundreds of thousands of individual human genomes, and producing draft sequences for hundreds of thousands of species across the entire tree of life; as of 2021, the National Center for Biotechnology Information (NCBI) stored over 36 petabytes of raw sequencing information in its Sequence Read Archive (SRA), with many times that volume not submitted.
 
 
 
@@ -120,6 +120,4 @@ A unitig that can not be extended in either direction is a *maximal unitig*.
 There are a variety of data models for representing the cDBG.
 The simplest is a flat collection of unitigs; edges can be inferred by storing only the unitig ends, which correspond to the decision $k$-mers and tips, and querying these ends for neighbors.
 
-
-#### de Bruijn Graph Tagging and Partitioning
 

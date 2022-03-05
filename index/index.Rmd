@@ -24,7 +24,7 @@ site: bookdown::bookdown_site
 
 bibliography: bib/dissertation.bib
 # Download your specific bibliography database file and refer to it in the line above.
-csl: csl/ecology.csl
+csl: csl/pnas.csl
 # Download your specific csl file and refer to it in the line above.
 link-citations: yes
 linkcolor: blue
