@@ -12,7 +12,7 @@ chair: "C. Titus Brown"
 signature1: "Rob Patro"
 signature2: "Fereydoun Hormozdiari"
 abstract: |
-  "Frogs are great. Ribbit Ribbit."
+  "Fill out for for ProQuest."
 acknowledgments: |
   "The process of my PhD and the production of this thesis was a long a difficult process. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life."
 dedication: |

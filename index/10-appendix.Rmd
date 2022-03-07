@@ -186,8 +186,12 @@ For movement around the graph, it defines:
 The `dBG` and `PdBG` classes inherit from this class as a mixin, and so all this functionality (and state) is also found on a given `dBG` object.
 `UnitigWalker` can be instantiated with an existing `dBG` or `PdBG` by passing a pointer to its constructor.
 
+<!--
+
 ## Sketches
 
 ## Sequence Parsing and Processors
 
 ## General Utilities
+
+-->
