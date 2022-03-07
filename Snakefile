@@ -65,3 +65,4 @@ rule install_goetia:
 include: 'common.snakefile'
 include: 'data.snakefile'
 include: 'chap1.snakefile'
+include: 'chap2.snakefile'

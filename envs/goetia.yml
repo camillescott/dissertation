@@ -31,6 +31,7 @@ dependencies:
     - libclang
     - libclang-cpp
     - python-clang
+    - xphyle
     - pip
     - pip:
       - plotille
