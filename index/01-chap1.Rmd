@@ -209,13 +209,12 @@ repo <- repository("../build/goetia")
 sha <- commits(repo)[[1]]$sha
 ```
 
-Results for Fig. \@ref(fig:fig-chap1-dl-build-speed), \@ref(fig:fig-chap1-dnode-prop), and [ref] were generated with `goetia` at commit `r sha` using the command `goetia cdbg build` `-K 31` `-S PHMapStorage` `-H FwdLemireShifter` `--interval 5000000` `--track-cdbg-metrics` `--pairing-mode split`.
-Streaming solid filtration was performed with `goetia solid filter` `-K 31` `-S ByteStorage` `-H CanLemireShifter` `-x 2e9 -N 4` `-C 3 -P 0.8` `--pairing-mode split`.
+Results for streaming compaction were generated with `goetia` at commit `r sha` using the command `goetia cdbg build` `-K 31` `-S PHMapStorage` `-H FwdLemireShifter` `--interval 5000000` `--track-cdbg-metrics` `--pairing-mode split`.
+Streaming solid filtration was performed with `goetia solid filter` `-K 31` `-S ByteStorage` `-H CanLemireShifter` `-x 2e9 -N 4` `-C 3 -P 0.8` `--pairing-mode split`; that is, reads are admitted if $80%$ of their $k$-mers have an abundance greater than or equal to 3 at the time of observation.
 
 Benchmarking was performed on a system with an AMD Ryzen 9 5900X CPU, 64GB of RAM, and a SATA SSD.
 The download connection speed as measured with the `speedtest-cli` package [@url:https://github.com/sivel/speedtest-cli] is approximately 300Mbit/s (~37MiB/s), which, in our tests, is faster than the FTP download speed for FASTA files from the ENA.
 The download stream tests were performed in serial to avoid interference between test runs.
-
 
 ## Results {#chap1-results}
 
