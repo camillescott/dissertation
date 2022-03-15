@@ -19,11 +19,6 @@ library(knitr)
 
 ## Motivation
 
-* Scaling sequence analysis
-* Improving accessibility
-* Overly-deep pipelines / intermediate data
-* Sea-change toward streaming methods due to nanopore
-
 Large-scale genome sequencing is a paradigm-shifting technology for biology of the 21st century.
 Since the sequencing of the human genome was declared complete in April of 2003, genomics has been a core part of the public conscience and rapidly grown as a tool for biological research.
 What started as a small-scale molecular biology method for understanding individual genes grew into projects mapping out the genomes of most major model organisms in great functional detail, sequencing entire populations of microbes from the environment, mapping hundreds of thousands of individual human genomes, and producing draft sequences for hundreds of thousands of species across the entire tree of life; as of 2021, the National Center for Biotechnology Information (NCBI) stored over 36 petabytes of raw sequencing information in its Sequence Read Archive (SRA), with many times that volume not submitted.
@@ -42,6 +37,14 @@ These algorithms are of course concerned with finite streams of data.
 
 Streaming approaches find the most use when data is too large to fit in main memory; for example, when working with massive network traffic data one may only be concerned with some properties of the underlying graph which itself is much too large for main memory, necessitating streaming approaches that drill down specifically to those properties.
 In a genomics context, we might be interested in analyzing a set of sequencing reads without generating intermediate files or making multiple passes over large text files of sequences.
+
+The data stream model was initially formalized by researchers at Digital Systems Research Center [@doi:10.1090/dimacs/050/05].
+They define a *data stream* as "a sequence of data items $x_1 \ldots x_i \ldots x_n$ such that the items are read once in increasing order of the indices $i$"; this definition has persisted to today.
+Their work further parameterized a computational model by the number of passes $P$, with work built on this definition sometimes referring to algorithms where $P > 1$ categorized as semi-streaming.
+While there is a paucity of surveys considering streaming algorithms in *general*, several focus on more specific applications while giving some generalized overview of streaming models.
+In [@doi:10.1007/978-1-4419-6045-0_13], streaming algorithms for massive graphs are explored.
+[@doi:10.1145/543613.543615] explores the streaming model in contrast to traditional database management approaches, and further subdivides streaming methods: approximate query processing, sliding window approaches which consider only recent elements of a stream, sampling and "synopsis" approaches for when the rate of a stream is too high, and the tradeoffs between batching, sampling, and sketching.
+*Data Streams: Algorithms and Applications* [@doi:10.1561/0400000002] is a textbook survey of broader data stream problems, of which streaming algorithms are a subset.
 
 #### Streaming in Omics
 
@@ -95,8 +98,8 @@ These length-$k$ sequences are referred to as $k$-mers, and the terms nodes and 
 This means that $G(k, \Sigma)$ has a maximum number of nodes $\| \Sigma \|^k$ and each node has a maximum in and out degree of $\| \Sigma \|$.
 If we define $pre(n_i)$ to be the length $k-1$ prefix of some node $n_i \in G$ and $suf(n_i)$ to be the length $k-1$ suffix, the out-neighbors of $n_i$ can be discovered by querying $\{ suf(n_i) + s,  \forall s \in \Sigma \}$ and the in-neighbors accordingly: that is to say, in this construction, known as the *node-centric* de Bruijn graph, the edges are implied by the set of nodes, and it is only necessary to use an efficient set data structure to implement a basic dBG.
 
-Let $\delta_in(v)$ be the in-degree of a node $v$, and $delta_out(v)$ be the out-degree of a node $v$.
-The nodes in a dBG with in on out-degree greater than $1$ are *decision nodes*, their associated $k$-mers *decision $k$-mers*.
+Let $\delta_{in}(v)$ be the in-degree of a node $v$, and $\delta_{out}(v)$ be the out-degree of a node $v$.
+A node $v$ where $\delta_{in}(v) > 1$ or $\delta_{out}(v) > 1$ is a *decision node*, and its associated $k$-mer a *decision $k$-mer*.
 
 de Bruijn graphs have been used to great effect in genomics applications since they were first applied to them [@myers_toward_1995].
 The principle advantage of the dBG is its simplification of the process of overlap detection between sequences: $k$-mers can stored as hashed integers for faster querying, and length $k-1$ overlaps can be discovered by using the same method as edge detection.
@@ -108,16 +111,22 @@ While the standard de Bruijn graph is a useful abstraction, in practice, most im
 The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in- and out-degree of $1$, such graphs contain large quantities of redundant $k$-mers; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in an input sequence can introduce up to $k$ new nodes in the graph.
 As a result, even small error and polymorphism rates in moderate sized data produce graphs with hundreds of millions or billions of nodes.
 
-These problems are addresses by the Compact de Bruijn Graph (cDBG).
-In the cDBG, paths of the form $v_0 \rightarrow ... v_n$ where $delta_out(v_0) = 1$, $delta_in(v_{1..n-1})$ and $delta_out(v_{1...n-1})$ are $1$, and $delta_in(v_n) = 1$ are compacted into single nodes; that is, linear paths are reduced to single nodes defined by their sequence, and the ends of these sequences may be either tips (that is, they have degree zero) or decision $k$-mers.
+These problems are addressed by the compact(ed) de Bruijn Graph (cDBG).
+In the cDBG, paths of the form $v_0 \ldots v_i \ldots v_n$, where  $\delta_{in}(v_{1..n-1})$ and $\delta_{out}(v_{1...n-1})$ are exactly $1$, are merged into single nodes; that is, linear paths are reduced to single nodes defined by their sequence, and the ends of these sequences may be either tips (that is, they have degree zero) or decision $k$-mers.
 This representation preserves the implicit edge definition, while avoiding the high overhead of storing redundant $k$-mers.
 
 The compacted nodes, and their associated sequences, are referred to as *unitigs*.
-A unitig that can not be extended in either direction is a *maximal unitig*.
-
-#### cDBG Representations
+A unitig that can not be extended in either direction is a *maximal unitig*: this is, $\delta_{in}(v_0) = 0$ or $v_0$ is a decision node, and $\delta_{out}(v_n) = 0$ or $v_n$ is a decision node.
+The term *unitig* was first introduced in [@movahedi2012novo], where the process of forming unitigs was referred to as "condensation."
+*Compaction* and *compact* or *compacted* de Bruin graph have since become the accepted terms.
+The most basic process of compaction was earlier described and implemented for the Velvet assembler [@pmc:PMC2336801], the first mainstream de Bruijn graph assembler; here it was introduced as a lossless graph simplification method.
 
 There are a variety of data models for representing the cDBG.
 The simplest is a flat collection of unitigs; edges can be inferred by storing only the unitig ends, which correspond to the decision $k$-mers and tips, and querying these ends for neighbors.
+How this subset of $k$-mers is stored can vary by implementation, with simpler models using a hash table directly [abyss,velvet], and later work transitioning to succinct data structures like the FM-Index [@doi:10.1109/SFCS.2000.892127].
+Regardless, a key observation is that the compact de Bruijn graph is defined by its set of decision $k$-mers, which, along with the formalization of the node-centric de Bruijn graph [@chikhi2016compacting] (where edges are stored implicitly, as defined previously), brings about the concept of Navigational Data Structures for assembly [@DOI:10.1089/cmb.2014.0160].
+[@DOI:10.1089/cmb.2014.0160] provides a good background survey of the methods used for navigational data structures up until 2015; since then, considerable work has gone into augmenting the graph with additional information, such as the colored compact de Bruijn graph, which is beyond the scope of this work.
 
-
+Notably, the succinct data structures, while offering query and storage efficiency, are not straightforward to use in a dynamic fashion.
+Simpler membership structures, like the hash tables used in [@doi:10.1101/gr.089532.108; @pmc:PMC2336801] or Bloom filters [@doi:10.1073/pnas.1121464109], allow dynamic insertion of new $k$-mers, and hence edges, using the node-centric model.
+Dynamic data structures that allow efficient insertion and query are key to enabling streaming approaches.

@@ -52,30 +52,30 @@ Here, we explore an implementation of a streaming de Bruijn graph compactor. Our
 
 ### Definitions {#chap1-background-definitions}
 
-For some string $s$, let $s[i]$ be the symbol at position $i$, $0$-indexed, $s[i:j]$ be the substring of $s$ starting at position $i$ and not including position $j$, and $\texttt{len}(s)$ be the length of $s$. 
-If $s$ has length $L$, the $k$-mers of $s$ are given by $\texttt{kmers}(s) = \{s[i:i+k] \mid 0 \le i < L-k+1 \}$ ; that is, all length $k$ substrings of $s$.
-Let $\texttt{pre}(s)=s[0:k-1]$ and $\texttt{suf}(s)=s[L-k+1:L]$, that is, they yield the suffix and prefix of $s$.
+For some string $s$, let $s[i]$ be the symbol at position $i$, $0$-indexed, $s[i:j]$ be the substring of $s$ starting at position $i$ and not including position $j$, and $len(s)$ be the length of $s$. 
+If $s$ has length $L$, the $k$-mers of $s$ are given by $kmers(s) = \{s[i:i+k] \mid 0 \le i < L-k+1 \}$ ; that is, all length $k$ substrings of $s$.
+Let $pre(s)=s[0:k-1]$ and $suf(s)=s[L-k+1:L]$, that is, they yield the suffix and prefix of $s$.
 
-We then define a de Bruijn graph as $G_{k, \Sigma} = (N,E)$, where $N$ is a set of $k$-mers over alphabet $\Sigma$ and $E$ is the set of length $k$-1 exact overlaps between $k$-mers in $N$; that is, $E = \{e_{u \rightarrow v} \mid \texttt{suf}(u) = \texttt{pre}(v) \forall u,v \in N \}$. For convenience, assume $\Sigma=\{A,C,G,T\})$.
+We then define a de Bruijn graph as $G_{k, \Sigma} = (N,E)$, where $N$ is a set of $k$-mers over alphabet $\Sigma$ and $E$ is the set of length $k$-1 exact overlaps between $k$-mers in $N$; that is, $E = \{e_{u \rightarrow v} \mid suf(u) = pre(v) \forall u,v \in N \}$. For convenience, assume $\Sigma=\{A,C,G,T\})$.
 
-Given a set of sequences $S$, the de Bruijn graph $G_k(S)$  has $N = \bigcup_{s \in S}{\texttt{kmers}(s)}$.
-Note that our edge definition admits edges even when the corresponding ($k+1$)-mers containing the two overlapping $k$-mers are not present in any sequence in $S$; this is the node-centric de Bruijn graph, with edged defined implicitly, rather than explicitly encoded.
+Given a set of sequences $S$, the de Bruijn graph $G_k(S)$  has $N = \bigcup_{s \in S}{kmers(s)}$.
+Note that our edge definition admits edges even when the corresponding ($k+1$)-mers containing the two overlapping $k$-mers are not present in any sequence in $S$; this is the node-centric de Bruijn graph, where edges are defined implicitly by the set of known nodes.
 The in-neighbors and out-neighbors of a node $u$ can then be discovered by querying
-$\{\texttt{suf}(u) + \sigma \forall \sigma \in \Sigma\}$ and $\{\sigma + \texttt{pre}(u) \forall \sigma \in \Sigma\}$ in $G_k$, respectively. 
+$\{suf(u) + \sigma \forall \sigma \in \Sigma\}$ and $\{\sigma + pre(u) \forall \sigma \in \Sigma\}$ in $G_k$, respectively. 
  Let $\delta^-(u)$ and $\delta^+(u)$ yield these in-neighbors and out-neighbors.
 
-Now let $S$ be an ordered stream of sequences rather than a set. $S[t]$ is then the $t$th sequence in the stream, and $G_k(S)[t]$ is the de Bruijn graph with $N = \bigcup_{s \in S[0:t+1]}{\texttt{kmers}(s)}$.
+Now let $S$ be an ordered stream of sequences rather than a set. $S[t]$ is then the $t$th sequence in the stream, and $G_k(S)[t]$ is the de Bruijn graph with $N = \bigcup_{s \in S[0:t+1]}{kmers(s)}$.
 The total number of sequences in $S$ may or may not be known. We refer to the position $t$ in the stream as the $time$.
 $time$ may be analogous to actual observation time or simply position within a file, depending on the source of the stream.
 
 The compact de Bruijn graph (cDBG) is built from the  de Bruijn graph by converting non-branching paths of $k$-mers into single nodes.
 Define $C(G_k) = (N_c, E_c)$ as the compact de Bruijn graph built from $G_k$; for brevity, we call it $C_k$.
-A node ($k$-mer) $u \in G_k$ is a *decision node* ($k$-mer) if $|\delta^-(u)| > 1$ or $|\delta^+(u)| > 1$; that is, if its in-degree
+A node ($k$-mer) $u \in G_k$ is a *decision node* ($k$-mer) if $|\delta_{in}(u)| > 1$ or $|\delta_{out}(u)| > 1$; that is, if its in-degree
 or out-degree is greater than one.
 $N_d$ is the complete set of decision nodes in $G_k$.
 Consider a connected path $p = \{u_0, u_1, ... , u_L\} \in G_k$. $p$ is a unitig if none of its nodes are decision nodes, and $p$ cannot be further extended in either direction; a unitig in $C_k$ is a unitig node.
 The complete set of unitig nodes will be called $U$, and we define $N_c = N_d \cup U$.
-The edges $E_c$ of the cDBG are then $\{e_{u \rightarrow v} \mid \texttt{suf}(u) = \texttt{pre}(v) \forall u,v \in N_c \}$.
+The edges $E_c$ of the cDBG are then $\{e_{u \rightarrow v} \mid suf(u) = pre(v) \forall u,v \in N_c \}$.
 Note that this implies that, while decision nodes may be neighbors, unitig nodes may not.
 
 \begin{figure}
@@ -85,7 +85,7 @@ Note that this implies that, while decision nodes may be neighbors, unitig nodes
 		b) The \texttt{goetia} compact de Bruijn graph model. Decision nodes are shared with the underlying de Bruijn graph, and unitig nodes are mapped back to minimizers of their corresponding unitig paths. }
 \end{figure}
 
-A unitig node with no neighboring decision nodes is an $island$; a unitig node with decision nodes on either side is $full$; and a unitig node with a decision node on only one side is a $tip$. The edge-case where $\texttt{pre}(v) = \texttt{suf}(v)$ for a unitig $v$ is called a $circular$ unitig.
+A unitig node with no neighboring decision nodes is an $island$; a unitig node with decision nodes on either side is $full$; and a unitig node with a decision node on only one side is a $tip$. The edge-case where $pre(v) = suf(v)$ for a unitig $v$ is called a $circular$ unitig.
 As with the de Bruijn graph, we refer to the cDBG at time $t$ as $C_k[t]$.
 
 
@@ -94,7 +94,6 @@ As with the de Bruijn graph, we refer to the cDBG at time $t$ as $C_k[t]$.
 Broadly, the underlying de Bruijn graph is implemented as a simple set.
 Sequences are broken down into constituent $k$-mers and hashed, and if a sequence contains any $k$-mers not previously observed, the cDBG is updated from the sequence.
 The minimum set of traversals is made from the new $k$-mers to find newly introduced decision $k$-mers which split existing unitigs and extensions of existing unitigs, and new unitigs are added when necessary.
-
 
 The next sections describe the compaction process and implementation in detail.
 
@@ -111,7 +110,11 @@ This limits the practical application to moderately-sized assembly graphs due to
 
 ### cDBG Data Structure 
 
-The cDBG data structure consists of two maps: first, a basic hash table of known decision nodes $N_d$, and a map from $k$-mer hashes of the ends of unitig paths to the unitig nodes $U$. These two structures are sufficient to define the entire cDBG: neighbors of decision nodes are necessarily tips in $U$, and island unitigs can be discovered from their tips. However, in order to split existing unitigs, potentially long traversals would need to be made from induced decision $k$-mers to unitig ends; as such, we store an auxiliary map $T$ from the minimizers of the unitig paths to the unitigs. This sets the maximum traversal distance from an induced decision $k$-mer to find the unitig containing it to the window size $w$ of the minimizer.
+The cDBG data structure consists of two maps: first, a basic hash table of known decision nodes $N_d$, and a map from $k$-mer hashes of the ends of unitig paths to the unitig nodes $U$. 
+These two structures are sufficient to define the entire cDBG: neighbors of decision nodes are necessarily tips in $U$, and island unitigs can be discovered from their tips.
+Note that unlike in the standard unitig model, where decision $k$-mers are the ends of unitigs, we store decision $k$-mers as their own nodes; this is an implementation detail, and standard unitigs can be trivially deduced by joining our unitig nodes with their neighboring decision nodes.
+Unitig nodes store the hashes of their ends for reverse indexing, a 64-bit unsigned node ID, a 64-but unsigned component ID, the full sequence of their path in the dBG, and a meta attribute corresponding to their type: tip, full, circular, or decision.
+The component ID is not strictly necessary for compaction functionality and is currently only used for the analysis function that finds connected components.
 
 ### Mutations to the cDBG
 
