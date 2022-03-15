@@ -130,3 +130,11 @@ Regardless, a key observation is that the compact de Bruijn graph is defined by 
 Notably, the succinct data structures, while offering query and storage efficiency, are not straightforward to use in a dynamic fashion.
 Simpler membership structures, like the hash tables used in [@doi:10.1101/gr.089532.108; @pmc:PMC2336801] or Bloom filters [@doi:10.1073/pnas.1121464109], allow dynamic insertion of new $k$-mers, and hence edges, using the node-centric model.
 Dynamic data structures that allow efficient insertion and query are key to enabling streaming approaches.
+
+### Conclusion
+
+The rapid and growing generation of sequence data, the advent of real-time sequencing technologies, and the need for accessible genomics analysis for a wide range of consumers can be partially addressed by the adoption of streaming approaches.
+While some methods have already been adapted for streaming, de Bruijn graph compaction, a key component of assembly pipelines, has not; further, sublinear methods remain uncommon.
+Here, we will first focus on adapting compaction for streaming, and show how this new paradigm also enables novel analysis methods for assembly graph structure.
+Then, building on that work, we will explore preliminary sub-linear approaches for filtering sequences prior to compaction and further downstream analysis.
+Our goal is to provide a framework for more streaming methods to build on in the future: we hope that, as technology and algorithms improve, we will eventually see the evolution of end-to-end streaming pipelines, from sequencing instrument to biological inquiry.
