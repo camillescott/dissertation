@@ -118,25 +118,25 @@ The component ID is not strictly necessary for compaction functionality and is c
 
 ### Mutations to the cDBG
 
-The streaming compact de Bruijn graph can be defined by its decision $k$-mers and the $k$-mers terminating its current unitigs. While unitigs are subject to mutation throughout streaming construction (splitting and merging), decision nodes within the cDBG are never deleted once created, a property which can be exploited for construction (CTB: during graph construction?).
+The streaming compact de Bruijn graph can be defined by its decision $k$-mers and the $k$-mers terminating its current unitigs. While unitigs are subject to mutation throughout streaming construction (splitting and merging), decision nodes within the cDBG are never deleted once created, a property which can be exploited during graph construction.
 
 In the following sections, a *new* $k$-mer in $G_t$ is a $k$-mer not present in $G_{t-1}$; that is, a $k$-mer first introduced in fragment $t$. A *new decision $k$-mer* is a new $k$-mer which is also a decision $k$-mer. An *induced decision $k$-mer* is a $k$-mer which is not newly introduced, but became a decision $k$-mer at time $t$. A *new unitig node* is a unitig comprising only new $k$-mers. An existing unitig node is *split* when one its $k$-mers becomes an induced decision $k$-mer, and two unitig nodes are merged when a path of new $k$-mers exists between two of their tip $k$-mers. Given a sequence $s_t \in SS$, the *segments* of $s_t$ are the paths of new $k$-mers in $s_t$, terminated at existing $k$-mers and new decision $k$-mers. Now, we will define the ways in which a segment can mutate the cDBG.
 
 ### Inserting New Sequences and Finding New Segments
 
-The first step to updating the cDBG with a new sequence is to insert its $k$-mers into the dBG and divide its new $k$-mers into their constituent segments. Once we have the segments, we use them to update the state of the cDBG. \ref{FindSegments} describes this procedure: segment paths are split on existing $k$-mers and new decision $k$-mers.
+The first step to updating the cDBG with a new sequence is to insert its $k$-mers into the dBG and divide its new $k$-mers into their constituent segments. Once we have the segments, we use them to update the state of the cDBG. Alg. \ref{FindSegments} describes this procedure: segment paths are split on existing $k$-mers and new decision $k$-mers.
 
 ```{r echo=FALSE, results='asis'}
 res <- knitr::knit_child('algs/chap1-findsegments-alg.Rmd', quiet=TRUE)
 cat(res, sep='\n')
 ```
 
-Only the first and last $k$-mers in a segment, and new decision $k$-mers, are able to induce an existing $k$-mer to become a decision $k$-mer, and thereby potentially split an existing unitig. \ref{InduceDecisionKmers} lays out the procedure for handling these $k$-mersr; see also \@ref(lem:inducers-lemma).
+Only the first and last $k$-mers in a segment, and new decision $k$-mers, are able to induce an existing $k$-mer to become a decision $k$-mer, and thereby potentially split an existing unitig. Alg. \ref{InduceDecisionKmers} lays out the procedure for handling these $k$-mersr; see also lemma \@ref(lem:inducers-lemma).
 
 ```{r child='algs/chap1-induce-alg.Rmd'}
 ```
 
-With this procedure defined, we are able to update the cDBG from the new segment. We attempt to induce decision $k$-mers from the first and last $k$-mers in the segment and split unitigs if necessary; if the first or last $k$-mer is not a new decision $k$-mer and does not match up to an existing unitig tip (\@ref(cor:tip-corollary)), we search for induced decision $k$-mers only in the direction away from the segment.
+With this procedure defined, we are able to update the cDBG from the new segment. We attempt to induce decision $k$-mers from the first and last $k$-mers in the segment and split unitigs if necessary; if the first or last $k$-mer is not a new decision $k$-mer and does not match up to an existing unitig tip (corr. \@ref(cor:tip-corollary)), we search for induced decision $k$-mers only in the direction away from the segment.
 If neither end of the segment matches to an existing unitig, we produce a new island unitig with just the segment. The full procedure is detailed in \ref{InsertSegment}.
 
 ```{r child='algs/chap1-insert-alg.Rmd'}
@@ -180,12 +180,12 @@ If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a nei
 ### Graph Metrics
 
 In order to analyze the compact de Bruijn graph during construction, we optionally gather a number of metrics during the stream.
-The counts of the unitig node types described previously (\@ref(chap1-background-definitions)) are taken whenever a CDBG mutation is performed via appropriate incrementation and decrementation atomic counters; we also track the types of mutations performed, including unitig splits, merges, extensions, clips, and deletions.
+The counts of the unitig node types described in Definitions (see \@ref(chap1-background-definitions)) are taken whenever a CDBG mutation is performed via appropriate incrementation and decrementation atomic counters; we also track the types of mutations performed, including unitig splits, merges, extensions, clips, and deletions.
 Counts of unique $k$-mers are tracked when new $k$-mers are inserted into the dBG storage backends.
 These metrics are essentially "free" to compute, and so can be tracked with each sequence insertion.
 
 Other, more advanced metrics are more expensive, and must be taken at larger intervals for performance.
-Timing for advanced metrics is determined by a tunable $k$-mer interval, which is described in more detail in \@ref(chap2-methods-timing).
+Timing for advanced metrics is determined by a tunable $k$-mer interval, which is described in more detail in Chapter \@ref(chap2-methods-timing).
 Briefly, the fundamental unit of time is the $k$-mer, instead of the inserted sequence, to correct for varying sequence lengths, with the interval size $I$ generally set at some value much larger than the sequence length; for most results shown here, the interval is $1,000,000$ $k$-mers.
 The actual number of $k$-mers between measurements is actually $I + \varepsilon$, where $\varepsilon \leq L$, so as to insert complete sequences.
 We save the above count metrics to disk (or output stream) at every interval, as the required disk access is trivial to write a single row of JSON formatted integers.
@@ -207,6 +207,7 @@ Because the graphs tend to converge on stable topologies later in the stream, we
 library(git2r)
 repo <- repository("../build/goetia")
 sha <- commits(repo)[[1]]$sha
+sha <- substr(sha, 1, 10)
 ```
 
 Results for streaming compaction were generated with `goetia` at commit `r sha` using the command `goetia cdbg build` `-K 31` `-S PHMapStorage` `-H FwdLemireShifter` `--interval 5000000` `--track-cdbg-metrics` `--pairing-mode split`.
@@ -215,6 +216,10 @@ Streaming solid filtration was performed with `goetia solid filter` `-K 31` `-S 
 Benchmarking was performed on a system with an AMD Ryzen 9 5900X CPU, 64GB of RAM, and a SATA SSD.
 The download connection speed as measured with the `speedtest-cli` package [@url:https://github.com/sivel/speedtest-cli] is approximately 300Mbit/s (~37MiB/s), which, in our tests, is faster than the FTP download speed for FASTA files from the ENA.
 The download stream tests were performed in serial to avoid interference between test runs.
+
+Samples for analysis were selected from the European Nucleotide Archive (ENA).
+Accessions with `library_source` of `TRANSCRIPTOMIC` and `GENOMIC` were first subselected from the complete list of sample accessions; then, these were further reduced to those from the species *Caenorhabditis elegans*, *Mus musculus*, *Drosophila melanogaster*, *Saccharomyces cerevisiae*, and *Home sapiens*.
+Three accessions were randomly selected for each species and each library source.
 
 ## Results {#chap1-results}
 
@@ -225,13 +230,13 @@ It includes implementations of several exact and probabilistic $k$-mer sets and 
 This functionality is implemented as a C++ library, which can be installed as a shared library via `bioconda` [@doi:10.1038/s41592-018-0046-7].
 High-performance Python bindings are provided using `cppyy` [@doi:10.1109/PyHPC.2016.008], which are used in a corresponding Python library to provide a command line interface (CLI), analysis tools, and unit testing.
 Unit tests are performed using a library of pytest fixtures called the `debruijnal-enhance-o-tron` [@url:https://github.com/camillescott/debruijnal-enhance-o-tron].
-These fixtures randomly generate common assembly graph features parameterized by K, sequence lengths, and other constraints, allowing us to unit test compaction correctness in a manner similar to fuzzing.
+These fixtures randomly generate common assembly graph features parameterized by $K$, sequence lengths, and other constraints, allowing us to unit test compaction correctness in a manner similar to fuzzing.
 The dBG generators in the debruijnal-enhance-o-tron are implemented as an interface over a user-supplied dBG implementation, which means they bootstrap correctness-checking of the basic dBG and storage implementations as well.
 
 ### The cDBG can be constructed as sequences are downloaded in real time
 
 A key advantage of streaming methods is the ability to bypass writing the input data to disk.
-While streaming approaches are often more computationally complex than offline approaches, particularly when exact solutions are required, they can be valuable tools for pipeline construction when scaling is less of a concern, ie, for smaller data running on serverless architectures.
+While streaming approaches are often more computationally complex than offline approaches, particularly when exact solutions are required, they can be valuable tools for pipeline construction when scaling is less of a concern, for example with smaller data or when running on serverless architectures.
 Here, we show that our streaming compaction prototype functions at speeds practical for use as a prefilter for sequences directly downloaded from a remote source; that is, we can compact sequences at a rate commensurate with the speed of many sequence archives, with disk access only occurring when writing assembly graph metrics and saving the final resulting compact dBG.
 This prototype implementation struggles with memory scaling for large genomes, and as such, we have limited the input read data sets to samples with less than 100 million fragments.
 
@@ -244,10 +249,11 @@ Paired-end samples were streamed directly from the European Nucleotide Archive (
 The data rates were measured using the `pv`  command as follows: `curl -sL [URL] | pv -tbn 2>> [RESULTS] 1>> [OUTPUT]`.
 `[OUTPUT]` is a unix pipe read by `goetia cdbg build`; data rates were aggregated at 5 second intervals between both the left and right hand sample results. Higher data rates correspond to higher compaction rates and better performance.
 Performance here is bottlenecked by either the download bandwidth or the compaction rate, whichever is slower.
+`SAMEA3894957` is an outlier here, with a higher download rate at the time of testing, and being a relatively small *S. cerevisiae* genome.
 
 When reading sequences from the ENA using `curl`, `goetia cdbg` compacts at rates ranging from 2 to 5 MiB/s.
 These are approximately the download rates from the ENA on the test connection.
-Compaction rates are largely dictated by the chosen de Bruijn graph parameter `K`, the error rate of the sequencing experiment, and the polymorphism of the sequence being sampled.
+Compaction rates are largely dictated by the chosen de Bruijn graph parameter $K$, the error rate of the sequencing experiment, and the polymorphism rate of the sequence being sampled.
 The latter parameters drive the number of the decision nodes in the assembly graph: the more decision nodes in the assembly graph, the more fragmented, and the more graph operations required per insert.
 
 While these rates are sufficient for compacting directly downloaded sequence, the compaction rate is not the only important factor.
@@ -265,7 +271,7 @@ de Bruijn graph construction is mostly determined by the speed of the `insert` o
 With the exact backend using `parallel-hashmap`, we approach 10 million $k$-mers per second or 100 thousand sequences per second; note that the hashing task is a subset of the dBG construction task.
 Compaction hovers around 3 million $k$-mers per second, or 50 thousand sequences per second.
 Fig. \@ref(fig:fig-chap1-rate-comp) shows the full results of this test.
-We show results in both $k$-mers per second and sequences per second, but the underling timing in our implementation is based on $k$-mers, as sequence length varies between samples.
+We show results in both $k$-mers per second and sequences per second, but the underlying timing in our implementation is based on $k$-mers, as sequence length varies between samples.
 
 
 ```{r fig-chap1-rate-comp, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-rate-comp)", fig.align="center", out.width="100%"}
@@ -281,7 +287,7 @@ Compaction tends to be more than an order of magnitude slower than only hashing,
 As dBG insertion is a subset of the compaction task, insertion speed is a top candidate for optimization.
 `goetia` also does little in the way of optimizing string operations, such as bit packing or efficiently allocating memory with freelists, suggesting considerable room for improvement over the existing prototype.
 Finally, this implementation is single-threaded.
-A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work; some details on this backend can be found in \@ref(app-partitioned-storage).
+A storage backend using minimizer partitioning is included in the `goetia` library, which has the potential to enable multithreading in future versions, but we consider this currently outside the scope of this work; some details on this backend can be found in Appendix \@ref(app-partitioned-storage).
 
 ### Streaming Methods Yield New Approaches for Studying Sequence Data and Assembly Graphs
 
@@ -293,8 +299,8 @@ They also all show the slopes of their length proportions flattening out as more
 We expect to see this "saturation" behavior when most of the cDBG topology has been filled in: once the core structural $k$-mers have been observed, we mostly accumulate error [@brown_reference-free_2012].
 We can further explore these unitig distributions by comparing them to their associated graph topologies demonstrated in the bottom row.
 The middle, rRNA-depleted sample has almost no unitigs longer than 100bp. It also has a much higher proportion of island unitigs (those disconnected from any other unitig) compared to its Poly-A selected counterparts, and its number of island unitigs follows the distinctive saturation curve.
-These observations might lead us to conclude that this sample is dominated by many low-abundance transcripts, and also that most of the underlying sequence that there is to observe has been accounted for; the former is what we might expect given rRNA-depletion's affinity for many more RNA species [@doi:10.1038/s41597-020-00719-4], and the latter is supported by its higher coverage in comparison to its sister samples.
-We can also assume that any assembly of this cDBG will necessarily be highly fragmented and require considerable processing downstream.
+These observations suggest that this sample is dominated by many low-abundance transcripts, and also that most of the underlying sequence that there is to observe has been accounted for; the former is what we might expect given rRNA-depletion's affinity for many more RNA species [@doi:10.1038/s41597-020-00719-4], and the latter is supported by its higher coverage in comparison to its sister samples.
+We can also assume that any assembly of this cDBG will necessarily be highly fragmented.
 
 
 ```{r fig-chap1-node-metrics, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-node-metrics)", fig.align="center", out.width="100%"}
@@ -364,7 +370,7 @@ include_graphics("figure/chap1/chap1-results-solid-human.png")
 (ref:fig-chap1-solid-human) **Component metrics of three _Homo sapiens_ RNA-seq samples in solidity pipeline.**
 RNA-seq data was compacted in a streaming manner, first with no pre-filter, and then with the `goetia filter solid` pre-filter.
 The sequences that passed the solidity filter were piped directly into the compaction program.
-These three samples represent a variety of coverage levels and two different selection methods which play into the differences in assembly graph structure.
+These three samples represent a variety of coverage levels and two different selection methods.
 
 <!-- FIGURE: UNITIG LENGTH DISTRIBUTION IN SOLIDITY PIPELINE -->
 ```{r fig-chap1-solid-human-frag, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-solid-human-frag)", fig.align="center", out.width="100%"}
@@ -400,16 +406,16 @@ We also observe that all classes of unitigs demonstrate more stabilizing behavio
 We introduce a novel streaming approach for the construction of the compact de Bruijn graph.
 We describe that methodology of a prototype implementation of this approach which attempts to minimize graph traversals during the mutation of existing unitigs, allowing for useable streaming compaction on samples of "reasonable" size.
 Our approach values avoiding disk access in particular, trading for higher memory usage; instead, we help alleviate memory constraints by enabling integration into streaming pre-filtering pipelines which help reduce the number of unique $k$-mers in a stream.
-We see two clear avenues for future work: first, on reducing memory requirements by fully embracing AMQ data structures as $k$-mer storage backends, as our reference implementation chose exact backends for simplicity; and second, enabling multithreading through the use of our partitioned storage backends, described in the appendix \@ref(app-partitioned-storage).
+We see two clear avenues for future work: first, on reducing memory requirements by fully embracing AMQ data structures as $k$-mer storage backends, as our reference implementation chose exact backends for simplicity; and second, enabling multithreading through the use of our partitioned storage backends, described in Appendix \@ref(app-partitioned-storage).
 AMQ backends introduce a tradeoff between accepting erroneous unitigs as a result of traversals through paths created by false-positive $k$-mers and increasing the complexity of the implementation by tracking these false positives in a streaming manner.
-We believe that the latter solution is tractable by an extra filter in the decision $k$-mer induction step, but have avoided the implementation in this work in favor of exploring dynamic assembly graph behavior.
+We believe that the latter solution is made tractable by an extra filter in the decision $k$-mer induction step, but have avoided the implementation in this work in favor of exploring dynamic assembly graph behavior.
 
 We further show that streaming compaction allows a new suite of tools for analysing the effects of coverage and genomic complexity on assembly graph construction.
 Future work will explore sub-linear approaches to compaction making use of this saturation behavior.
 Chapter 2 dives into this property in context of streaming sketch algorithms, and provides a possible sub-linear pre-filter compaction that could be added to a pipeline including error correction, solidity filtering, and in-silico normalization.
 Streaming approaches are inherently amenable to this sort of flexibility in data processing pipelines; avoiding intermediate state, in combination with low-memory approaches enabled by sketching and AMQ methods, makes parameter sweeps that add and remove pipeline stages more tractable for the average bioinformatician.
 
-While we have focused on second-generation high-throughput sequence technologies, we believe streaming compaction could eventually find use when integrated with recent-generation single-molecule real-time (SMRT) sequence technology.
+While we have focused on second-generation high-throughput sequence technologies, we believe streaming compaction could eventually find use when integrated with recent-generation single-molecule real-time sequence technology.
 In particular, we hope to someday explore sub-linear compaction approaches that communicate with SMRT instruments live.
-As SMRT sequencers gain marketshare and increased software tooling, research in streaming methods will necessarily need to follow in order to keep up with the data deluge and help alleviate the complexities of deploying sequencers both in the field and in clinical settings.
+As SMRT sequencers gain market share and increased software tooling, research in streaming methods will necessarily need to follow in order to keep up with the data deluge and help alleviate the complexities of deploying sequencers both in the field and in clinical settings.
 We hope this work provides inspiration on what is possible with these technologies.

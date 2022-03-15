@@ -109,7 +109,7 @@ Hence, when a collection of sequences sampled from an underlying larger set of s
 
 While the standard de Bruijn graph is a useful abstraction, in practice, most implementations only use it as an intermediate representation.
 The reasons are twofold: firstly, because genomic dBGs tend to consist of many linear paths of $k$-mers with in- and out-degree of $1$, such graphs contain large quantities of redundant $k$-mers; secondly, because $k$-mers are exact substrings over a sliding window on the input sequences, each error or point mutation in an input sequence can introduce up to $k$ new nodes in the graph.
-As a result, even small error and polymorphism rates in moderate sized data produce graphs with hundreds of millions or billions of nodes.
+As a result, even low error and polymorphism rates in moderate sized data produce graphs with hundreds of millions or billions of nodes.
 
 These problems are addressed by the compact(ed) de Bruijn Graph (cDBG).
 In the cDBG, paths of the form $v_0 \ldots v_i \ldots v_n$, where  $\delta_{in}(v_{1..n-1})$ and $\delta_{out}(v_{1...n-1})$ are exactly $1$, are merged into single nodes; that is, linear paths are reduced to single nodes defined by their sequence, and the ends of these sequences may be either tips (that is, they have degree zero) or decision $k$-mers.
@@ -123,7 +123,7 @@ The most basic process of compaction was earlier described and implemented for t
 
 There are a variety of data models for representing the cDBG.
 The simplest is a flat collection of unitigs; edges can be inferred by storing only the unitig ends, which correspond to the decision $k$-mers and tips, and querying these ends for neighbors.
-How this subset of $k$-mers is stored can vary by implementation, with simpler models using a hash table directly [abyss,velvet], and later work transitioning to succinct data structures like the FM-Index [@doi:10.1109/SFCS.2000.892127].
+How this subset of $k$-mers is stored can vary by implementation, with simpler models using a hash table directly [@doi:10.1101/gr.074492.107; @doi:10.1101/gr.089532.108], and later work transitioning to succinct data structures like the FM-Index [@doi:10.1109/SFCS.2000.892127].
 Regardless, a key observation is that the compact de Bruijn graph is defined by its set of decision $k$-mers, which, along with the formalization of the node-centric de Bruijn graph [@chikhi2016compacting] (where edges are stored implicitly, as defined previously), brings about the concept of Navigational Data Structures for assembly [@DOI:10.1089/cmb.2014.0160].
 [@DOI:10.1089/cmb.2014.0160] provides a good background survey of the methods used for navigational data structures up until 2015; since then, considerable work has gone into augmenting the graph with additional information, such as the colored compact de Bruijn graph, which is beyond the scope of this work.
 

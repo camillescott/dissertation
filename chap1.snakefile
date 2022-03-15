@@ -527,6 +527,9 @@ rule chap_one_results_figure_three:
                 ax.set_xlabel('Normalized Position in Stream')
                 ax.set_title(sample_name)
                 sax.set_ylabel('Max Component Size')
+                
+                ax.yaxis.set_major_formatter(numerize_fmtr)
+                sax.yaxis.set_major_formatter(numerize_fmtr)
 
                 g.legend(handles=[Line2D([], [], marker='_', color=sns.color_palette()[0], label='Components'), 
                                   Line2D([], [], marker='_', color=sns.color_palette()[1], label='Max Component Size')],
