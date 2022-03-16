@@ -78,13 +78,6 @@ The complete set of unitig nodes will be called $U$, and we define $N_c = N_d \c
 The edges $E_c$ of the cDBG are then $\{e_{u \rightarrow v} \mid suf(u) = pre(v) \forall u,v \in N_c \}$.
 Note that this implies that, while decision nodes may be neighbors, unitig nodes may not.
 
-\begin{figure}
-	\centering
-	\missingfigure[figwidth=\textwidth]{Paneled figure showing the raw de Bruijn graph structure, the cDBG structure, and the relationship between the two.}
-	\caption{\label{fig:cdbg-structure}a)  The underlying de Bruijn graph. Decision nodes are colored red. 
-		b) The \texttt{goetia} compact de Bruijn graph model. Decision nodes are shared with the underlying de Bruijn graph, and unitig nodes are mapped back to minimizers of their corresponding unitig paths. }
-\end{figure}
-
 A unitig node with no neighboring decision nodes is an $island$; a unitig node with decision nodes on either side is $full$; and a unitig node with a decision node on only one side is a $tip$. The edge-case where $pre(v) = suf(v)$ for a unitig $v$ is called a $circular$ unitig.
 As with the de Bruijn graph, we refer to the cDBG at time $t$ as $C_k[t]$.
 
@@ -115,6 +108,15 @@ These two structures are sufficient to define the entire cDBG: neighbors of deci
 Note that unlike in the standard unitig model, where decision $k$-mers are the ends of unitigs, we store decision $k$-mers as their own nodes; this is an implementation detail, and standard unitigs can be trivially deduced by joining our unitig nodes with their neighboring decision nodes.
 Unitig nodes store the hashes of their ends for reverse indexing, a 64-bit unsigned node ID, a 64-but unsigned component ID, the full sequence of their path in the dBG, and a meta attribute corresponding to their type: tip, full, circular, or decision.
 The component ID is not strictly necessary for compaction functionality and is currently only used for the analysis function that finds connected components.
+
+```{r fig-chap1-goetia-cdbg, results="asis", echo=FALSE, fig.cap="(ref:fig-chap1-goetia-cdbg)", fig.align="center", out.width="100%"}
+include_graphics("figure/chap1/goetia-cdbg-storage.drawio.pdf")
+```
+
+(ref:fig-chap1-goetia-cdbg) **goetia cDBG Storage Model**
+Unitigs are indexed by the hash value of their end $k$-mers; these are stored in a `parallel-hashmap` linking the hash values to the unitig pointers.
+Decision $k$-mers are index in their own hashmap by their $k$-mer hashes.
+Both store their sequences; in practice, for memory efficiency, we could store only the end $k$-mers to seed traversal, but we choose to store the entire unitig to be able to quickly write the cDBG to disk.
 
 ### Mutations to the cDBG
 

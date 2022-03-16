@@ -130,7 +130,7 @@ The `PartitionedStorage` exposes the same interface as the basic `Storage`, but 
 The API is agnostic to the method of partitioning; all that is required is a number of partitions and an additional parameter specifying the partition in which to store an item while inserting and querying.
 The `PartitionedStorage` is template-parameterized with one of the formerly described storage classes, and a number of data structures equal to the number of partitions are constructed.
 Thus, care must be taken when using underlying storage classes with a fixed, pre-allocated amount of memory, so as to not over-allocate available system memory.
-The expected  partitioning method for $k$-mers are minimizer methods, particularly the Universal $k$-mer Hitting Set (UHS), which is implemented in the `hashing` namespace and described in the streaming sketch chapter.
+The expected  partitioning method for $k$-mers are minimizer methods, particularly the Universal $k$-mer Hitting Set (UHS), which is part of the hashing functionality.
 
 Partitioned storage offers several advantages, at the cost of increased processing time spent on determining partitions.
 For storages with poor cache locality, an appropriately-determined partitioning methodology can reduce cache misses during query and graph traversal.
@@ -164,7 +164,7 @@ It reports detailed state information its primary interfaces in the form of the 
 - `TraversalState end_state`: An `enum` holding the reason a traversal was terminated.
 
 From this information, a walk can be converted to a unitig via its `to_string` method.
-`TraverState` can have the following values:
+`TraversalState` can have the following values:
 
 - `STOP_FWD`: There was no neighbor to traverse to (in or out-degree of zero).
 - `DECISION_FWD`: Traversal stopped at a decision $k$-mer with in/out degree greater than one in the direction of traversal.
