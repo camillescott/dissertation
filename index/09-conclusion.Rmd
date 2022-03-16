@@ -1,8 +1,14 @@
 # Conclusion {-}
 
-If we don't want Conclusion to have a chapter number next to it, we can add the `{-}` attribute.
+In this text, we have demonstrated methods for steaming compaction of the de Bruijn graph and dynamic assembly graph analysis, and explored approaches for sub-linear sequence analysis with sketches.
+Streaming approaches offer a new perspective on *de novo* sequence analysis: firstly, by providing new ways of analyzing the structure of our sequencing data, and secondly, by broadening the ways we can build analysis pipelines as a whole.
+We further demonstrate several pieces of software that follow a design pattern favoring greater accessibility.
+`dammit` works to build a transcriptome annotation pipeline using state of the art workflow approaches, while providing commonly used utilities in the form of small command line tools.
+`shmlast` works to improve the accessibility of an existing tool by rewriting it to use the Python ecosystem and exposing its core functionality as a library.
+Both prioritize ease-of-use and teachability, and have been used in a workshop setting with novice bioinformaticians.
+We then demonstrate `SuchTree`, which provides an efficient phylogenetic tree library by adopting the UNIX philosophy of simple, limited-purpose tools.
+The core software product for this dissertation, `goetia`, provides a rich library in both the Python and C++ ecosystems, along with a set of command line tools, that is easily installable through the widely adopted `conda` package manager.
 
-**More info**
-
-And here's some other random info: the first paragraph after a chapter title or section head _shouldn't be_ indented, because indents are to tell the reader that you're starting a new paragraph. Since that's obvious after a chapter or section title, proper typesetting doesn't add an indent there.
-
+The common thread is prioritization of community: streaming methods that strive to be workable when storage space is limited, composability through open source code and software distribution, and reproducibility through workflow systems.
+The document itself was written and compiled by building on the aggiedown [@url:https://github.com/ryanpeek/aggiedown] package and Manubot citation processor [@doi:10.1371/journal.pcbi.1007128].
+By adopting these principles, we hope that this work can be reused, remixed, and extended in the years to come.
