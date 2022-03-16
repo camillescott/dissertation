@@ -30,7 +30,7 @@ link-citations: yes
 linkcolor: blue
 urlcolor: blue
 citecolor: blue
-lot: true
+lot: false
 lof: true
 #space_between_paragraphs: true
 # Delete the # at the beginning of the previous line if you'd like
