@@ -105,7 +105,7 @@ include_graphics("figure/chap2/sketching-saturation-curve.png")
 ```
 
 (ref:fig-chap2-sketch-saturation) **Sketching distance curves showing saturation of a transcriptomic sample.**
-Sourmash FracMinHash sketch at scaled=1000, $K$=31, computed on a 21.5 million read transcriptomic sample. *Left*: Jaccard similarity between successive sketches, computed at varying sampling intervals. *Middle*: Jaccard distances between sketches at given time intervals and the final sketch. *Right*: Jaccard distances between sketches at given time intervals and the downstream sequences as assembled with Trinity in [@doi:10.1093/gigascience/giy158].
+Sourmash FracMinHash sketch at $scaled=1000$, $K=31$, computed on a 21.5 million read transcriptomic sample. *Left*: Distance ($1.0 - Jaccard$) between successive sketches, computed at varying sampling intervals. *Middle*: Distances between sketches at given time intervals and the final sketch. *Right*: Distances between sketches at given time intervals and the downstream sequences as assembled with Trinity in [@doi:10.1093/gigascience/giy158].
 
 ```{r fig-chap2-sourmash-diginorm, results="asis", echo=FALSE, fig.cap="(ref:fig-chap2-sourmash-diginorm)", fig.align="center", out.height="6in"}
 include_graphics("figure/chap2/sourmash-diginorm-rolling-wgs-txome.png")
