@@ -173,11 +173,13 @@ An existing unitig is, by definition, composed of existing non-decision $k$-mers
 If a $k$-mer $\mu$ which is the first or last $k$-mer of a new segment has a neighbor $\nu$ which is not a unitig tip, then $\nu$ must be an induced decision $k$-mer.
 :::
 
+<!--
 \begin{figure}
 	\centering
 	\missingfigure[figwidth=\textwidth]{Figure illustrated disturbed decision nodes.}
 	\caption{\label{fig:disturbed-dnodes}Caption describing decision nodes, references algorithm.}
 \end{figure}
+-->
 
 ### Graph Metrics
 

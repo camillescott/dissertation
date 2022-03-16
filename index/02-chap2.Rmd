@@ -83,7 +83,7 @@ Excepting a small $\varepsilon$ allows sequence consumers to benefit from the en
 Let the time points corresponding to these intervals be referred to as $i_0 \ldots i_j \ldots i_N$, where $N$ is the $k$-mer time length of the stream, and the sketch associated with these time points as $A_0 \ldots A_j \ldots A_N$.
 During streaming sketching, the distance functions $\delta ( A_j, A_{j+1} )$ are called between sketches at successive intervals, and the result $d_j$ added to the distance list $\Delta = \{ d_0 \ldots d_j \ldots d_{N-1} \}$.
 When our sketch is a `sourmash` Min-hash sketch, $\delta$ is $1 - Jaccard$, where $Jaccard$ is the Jaccard similarity.
-For the `draff` sketch, $\delta$ can be any standard distance function: we commonly use the euclidean, cosine, correlation, and Canberra [@doi:10.1093/comjnl/9.1.60] distances.
+For the `draff` sketch, $\delta$ can be any standard distance function: we commonly use the Euclidean, cosine, correlation, and Canberra [@doi:10.1093/comjnl/9.1.60] distances.
 
 ## Results
 
@@ -118,14 +118,14 @@ MinHash sketches computed with `sourmash` using $K=31$ and $N=25000$. Distances 
 include_graphics("figure/chap2/sourmash-diginorm-rolling-wgs-txome-single.png")
 ```
 (ref:fig-chap2-sourmash-diginorm-single) **Streaming Jaccard Similarity of sourmash-MinHash signatures.**
-Distance curves of the same samples as \@ref(fig:fig-chap2-sourmash-diginorm) at digitally-normalize maximum coverage of $20$.
+Distance curves of the same samples as in Fig. \@ref(fig:fig-chap2-sourmash-diginorm) at digitally-normalized maximum coverage of $20$.
 
-\@ref(fig:fig-chap2-sketch-saturation) showed FracMinHash sketches, which, while allowing greater sensitivity, have unbounded size.
+Fig. \@ref(fig:fig-chap2-sketch-saturation) showed FracMinHash sketches, which, while allowing greater sensitivity, have unbounded size.
 For streams of sequence fragments, as opposed to assembled genomes, this property becomes problematic, with sketches growing to unwieldy sizes due to low-coverage and erroneous $k$-mers.
-\@ref(fig:fig-chap2-sourmash-diginorm) and \@ref(fig:fig-chap2-sourmash-diginorm-single) show distance curves for regular MinHash sketches with size $N=25000$.
+Figs. \@ref(fig:fig-chap2-sourmash-diginorm) and \@ref(fig:fig-chap2-sourmash-diginorm-single) show distance curves for regular MinHash sketches with size $N=25000$.
 As we can see, the standard MinHash sketch also shows saturation behavior.
-The lower-coverage RNA-Seq samples, for example, the top-right sample with approximately $1.4$m sequences, show saturation at relative positions much further into the stream, and also show a wider spread between the different coverage levels of digital normalization.
-The $70m$ sequence whole-genome sample of *C. elegans*, in the bottom left, change in distance stabilizes much sooner.
+The lower-coverage RNA-Seq samples, for example the top-right sample with approximately $1.4$m sequences, show saturation at relative positions much further into the stream, and also show a wider spread between the different coverage levels of digital normalization.
+For the $70m$ sequence whole-genome sample of *C. elegans*, in the bottom left, change in distance stabilizes much sooner.
 We posit two reasons for this: firstly, the (average) coverage of this sample is much higher than the relatively smaller RNA-seq sample; and secondly, the genomic sample has more unique $k$-mers than the RNA-seq sample, with $k$-mer cardinality many orders of magnitude higher than the size of the MinHash sketch.
 The latter point is of great importance, as clearly, very large MinHash sketches will be necessary to detect significant differences in the sketch throughout the stream.
 
@@ -147,24 +147,24 @@ However, distances with the draff sketches can be measured at many more signific
 We can see that distances continue to reduce at a small, but steady, rate, with some exceptions.
 Periodicity suggests some of the samples may have technical artifacts, with the $log$ scale amplifying their effects.
 
-```{r fig-chap2-sourmash-draff-comp, results="asis", echo=FALSE, fig.cap="(ref:fig-chap2-sourmash-draff-comp)", fig.align="center", out.width="100%"}
+```{r fig-chap2-sourmash-draff-comp, results="asis", echo=FALSE, fig.cap="(ref:fig-chap2-sourmash-draff-comp)", fig.align="center", out.width="90%", out.height="90%"}
 include_graphics("figure/chap2/sourmash-draff-ref-comparison.png")
 ```
 
-(ref:fig-chap2-sourmash-draff-comp) **Comparison of MinHash and draff streaming distances as compared to representative sketches.**
+(ref:fig-chap2-sourmash-draff-comp) **MinHash and draff streaming distances as compared to representative sketches.**
 draff sketches with $W=31$, $K=9$ and MinHash sketches with $K=31$, $N=25000$ are compared.
-The distances are between the sketch at a given time point and the final sketch in the stream, as in the middle figure of \@ref(fig:fig-chap2-sketch-saturation).
+The distances are between the sketch at a given time point and the final sketch in the stream, as in the middle plot of Fig. \@ref(fig:fig-chap2-sketch-saturation).
 
 Fig. \@ref(fig:fig-chap2-sourmash-draff-comp) shows distances between the sketch at a given point and the final sketch of the stream for MinHash and draff.
 Here, the draff sketch shows its greater utility for the saturation problem.
 For a sketch to best capture stability *de novo*, we expect distance from the sketch of the final stream to have an inflection point that occurs when the underlying sampled sequence has been observed and new fragments transition to mostly introducing error.
 The signal for the MinHash sketches is dominated by error, and they fail to capture this effect.
-We posit that MinHash sketches of sufficient size should act similarly to the draff sketch; however, MinHash sketches are bound by worst-case $\mathcal{O}(log(n))$ insertion time, whereas insertion into the draff sketch is always $\mathcal{O}(1)$ (for the implemented exact and AMQ backends), which imposes scaling challenges on MinHash.
+We posit that MinHash sketches of sufficient size should act similarly to the draff sketch; however, MinHash sketches are bound by worst-case $\mathcal{O}(log(n))$ insertion time, which imposes scaling challenges on MinHash, whereas insertion into the draff sketch is always $\mathcal{O}(1)$ (for the implemented exact and AMQ backends).
 
 ### The Draff Sketch Enables Novel Dimensional Analyses of Assembly Graphs
 
 Because the Draff sketch is, intuitively, a compressed "snapshot" of $k$-mer space, in the form of vector of feature counts as opposed to the set of specific $k$-mer hashes in MinHash sketches, we are able use some more traditional numeric approaches with them.
-In \@ref(fig:fig-chap2-draff-pca), we view the stream of sketches as a matrix with each row a draff sketch corresponding to measurement times $i_0 \ldots i_N$.
+In Fig. \@ref(fig:fig-chap2-draff-pca), we view the stream of sketches as a matrix with each row a draff sketch corresponding to measurement times $i_0 \ldots i_N$.
 We then perform a Principle Component Analysis (PCA) along a length-10 sliding window of the rows, and extract the explained variance of the top two components for each window.
 In this way, we reduce the change in the compressed "$k$-mer space" over time to a 2-dimensional representation.
 This offers a different view on the saturation behavior.
@@ -194,7 +194,7 @@ The previous issues directly relate to developing functions for calling saturati
 Potential functions include: a specific distance cutoff, under which we immediately terminate; a distance cutoff where we terminate after the mean distance of a sliding window meets the threshold; measuring the variance of distances over a sliding window, wherein we try to more directly measure the stability of the sketches; or other statistical moments on the stream of distances.
 We briefly explored the behavior of the draff sketch in $W$-mer space via Principal Component Analysis, which opens up another potential set of methods for calling saturation.
 
-Finally, there is the question of integrating this streaming method with the streaming compaction described in \@ref(streaming-cdbg).
+Finally, there is the question of integrating this streaming method with the streaming compaction described in Chapter \@ref(streaming-cdbg).
 Streaming saturation detection is a natural pre-filter for streaming compaction, providing a potential sub-linear solution for construction of an inexact compact de Bruijn graph.
 The downstream effects on the resulting cDBG are of particular interest, as well as the results of including the method along with sequence error correction, solidity filtering, and digital normalization in pure-streaming pipelines.
 Future work would focus on these pipelines holistically.
