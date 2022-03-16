@@ -8,9 +8,6 @@
 \item[Chapter Authors]
 Camille Scott and C. Titus Brown
 
-\item[DOI]
-\url{}
-
 \end{description}
 \end{sizepar}
 

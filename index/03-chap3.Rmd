@@ -28,9 +28,6 @@ library(aggiedown)
 \item[Chapter Authors]
 Camille Scott and N. Tessa Pierce
 
-\item[DOI]
-\url{https://doi.org}
-
 \end{description}
 \end{sizepar}
 
