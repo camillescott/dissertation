@@ -1,6 +1,6 @@
 # Conclusion {-}
 
-In this text, we have demonstrated methods for steaming compaction of the de Bruijn graph and dynamic assembly graph analysis, and explored approaches for sub-linear sequence analysis with sketches.
+In this dissertation, we have demonstrated methods for steaming compaction of the de Bruijn graph and dynamic assembly graph analysis, and explored approaches for sub-linear sequence analysis with sketches.
 Streaming approaches offer a new perspective on *de novo* sequence analysis: firstly, by providing new ways of analyzing the structure of our sequencing data, and secondly, by broadening the ways we can build analysis pipelines as a whole.
 We further demonstrate several pieces of software that follow a design pattern favoring greater accessibility.
 `dammit` works to build a transcriptome annotation pipeline using state of the art workflow approaches, while providing commonly used utilities in the form of small command line tools.
