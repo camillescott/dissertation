@@ -12,9 +12,27 @@ chair: "C. Titus Brown"
 signature1: "Rob Patro"
 signature2: "Fereydoun Hormozdiari"
 abstract: |
-  "Fill out for for ProQuest."
+  "The advent of high-throughput sequencing has radically altered the theory and practice of biology. Massive volumes of sequence data have necessitated comensurate advances in computational approaches to biological analysis; methods for the assembly of shotgun sequencing data into complete genomes, transcriptomcs, and metagenomes have been particularly foundational in enabling downstream study. More recently, sketching methods have allowed classification and comparison to scale to hundreds of thousands of samples.
+  
+  This dissertation extends that work by exploring streaming implementations of several core approaches. First, we introduce a method for single-pass construction of the compact de Bruijn graph, with support for novel methods of dynamic assembly graph analysis. Next, we explore the saturation behavior of streaming sequence sketches, and introduce a novel sketch we call `draff` which uses Universal $k$-mer Hitting Sets to represent the shape of assembly graphs. Finally, we introduce several pieces of research software for sequence comparison, transcript annotation, and phylogenetic tree building, which showcase accessible, open access design philosophies. We also introduce the `goetia` library and toolset for efficient de Bruijn graph algorithms in C++ and Python.
+  "
 acknowledgments: |
-  "The process of my PhD and the production of this thesis was a long a difficult process. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life."
+  "The process of my PhD and the production of this thesis was a long a difficult process. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life.
+  
+  A PhD is a necessarily an effort supported by a whole community of people. I have been privileged to have a community that is nothing short of phenomenal.
+
+  My wife Clarrisa, who has cherished, supported, and pushed me through thick and thin since we met here in Davis. 
+
+  My advisor Titus, who has guided and sometimes dragged me through my degree. If he has a defining attribute, it might be his extraordinarily deep well of patience and understanding; if not that, it is his firm dedication and commitment to supporting and encouraging his mentees.
+
+  My mom, dad, and sister in Michigan, all of whom have shaped, encouraged, and inspired me in all my endeavours. 
+
+  Russell, who has served as a mentor, inspiration, sometimes therapist, and most importantly, a great friend. Without him, I would never have finished this program.
+
+  Paula, Megan, and Joe, all of whom provided encouragement in times when I was low.
+
+  The members of the DIB Lab. 
+  "
 dedication: |
   "*Someone once told me that time was a predator that stalked us all our lives. But I rather believe than time is a companion who goes with us on the journey, and reminds us to cherish every moment because they'll never come again. What we leave behind is not as important how we lived... after all, Number One, we're only mortal.*"    
   (Captain Jean-Luc Picard, USS Enterprise (NCC-1701-D), United Federation of Planets)"
