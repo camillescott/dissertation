@@ -146,22 +146,22 @@ Databases are stored in the users home directory by default (in `~/.local/share/
 
 ### Annotation Pipeline
 
-\texttt{dammit annotate} takes a "standard" FASTA file as input. First, the FASTA headers are renamed and a mapping between the original
+\texttt{dammit run annotate} takes a "standard" FASTA file as input. First, the FASTA headers are renamed and a mapping between the original
 and new names is output; this avoids the issues that some programs have with certain characters in the header lines. Then, a basic
 set of sequence statistics are gathered, such as the number of transcripts, the $k$-mer redundancy, and the GC percent. BUSCO 
 [@simao_busco:_2015] is run 
 in transcriptome mode to assess completeness using whichever BUSCO database is specified by the user. 
-TransDecoder.LongOrfs [@haas_novo_2013] then finds
+`TransDecoder.LongOrfs` [@haas_novo_2013] then finds
 open reading frames and produces a set of basic protein translations; these translations are used to search against Pfam-A with
 hmmer [@durbin_biological_1998],
-which are then fed into TransDecoder.Predict to get a final set of gene model predictions. Infernal [@nawrocki_infernal_2013] 
+which are then fed into `TransDecoder.Predict` to get a final set of gene model predictions. Infernal [@nawrocki_infernal_2013] 
 is used to search Rfam for ncRNAs.
-OrthoDB v8 and optionally uniref90 are searched using LAST [@sheetlin_frameshift_2014,@kielbasa_adaptive_2011]
-If the user supplies any custom protein databases, they are searched for orthologs using Conditional Reciprocal Best Hits [@aubry_deep_2014].
+OrthoDB and optionally uniref90 or nr are searched using LAST [@sheetlin_frameshift_2014,@kielbasa_adaptive_2011]
+If the user supplies any custom protein databases, they are searched for orthologs using Conditional Reciprocal Best Hits [@aubry_deep_2014] as implemented in `shmlast` [@doi:10.21105/joss.00142].
 
 An example annotation run on the file \texttt{cdna.fa} with the user-supplied protein database \texttt{pep.fa} might look like so:
 
-\texttt{dammit annotate cdna.fa --user-databases pep.fa --busco-group eukaryota --n\textunderscore threads 2}
+\texttt{dammit run annotate cdna.fa --user-databases pep.fa --busco-group eukaryota --n\textunderscore threads 2}
 
 This will create a new folder called \texttt{cdna.fa.dammit}, which can be changed with the \texttt{--output} flag.
 This folder contains the files \texttt{cdna.fa.dammit.gff3} and \texttt{cdna.fa.dammit.fa}
