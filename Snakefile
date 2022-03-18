@@ -34,7 +34,8 @@ rule build_thesis:
                         '98-colophon',
                         '99-references')),
     bibliography='index/bib/dissertation.bib',
-    goetia='build/goetia/README.md'
+    goetia='build/goetia/README.md',
+    template='index/template.tex'
   shell: """
       cd index 
       rm -f _main.Rmd
