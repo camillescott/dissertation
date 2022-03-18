@@ -186,12 +186,25 @@ For movement around the graph, it defines:
 The `dBG` and `PdBG` classes inherit from this class as a mixin, and so all this functionality (and state) is also found on a given `dBG` object.
 `UnitigWalker` can be instantiated with an existing `dBG` or `PdBG` by passing a pointer to its constructor.
 
-<!--
 
 ## Sketches
 
+Currently, two types of sequence sketches are supported.
+The first is a MinHash sketch as implemented in sourmash.
+ `goetia::SourmashSketch` wraps a `MinHash *` exported by the sourmash `rust` core; this can be extracted from the Python MinHash object in sourmash via FFI and passed on to the `goetia` C++ wrapper.
+ The second is `goetia::UnikmerSketch`, which is the `draff` implementation.
+ This is a template parameterized with a `Storage` backend and a `Hash` type.
+ Both these sketches implement `insert_sequence` as their primary public facing interface.
+
 ## Sequence Parsing and Processors
 
-## General Utilities
+`goetia` provides `FastxParser` which wraps the `kseq` FASTA/Q parser; its primary public API is the `next` method which returns a `goetia::Record` object with attributes for the sequence header, the sequence itself, and the quality score, if present.
+`goetia::SplitPairedReader` bundles two `FastxParser` objects and parses and validates paired samples.
 
--->
+`goetia::FileProcessor` is a CRTP base-class that wraps a sequence parser, iterates the steam, and handles the resulting sequences in a generic fashio.
+The constructor takes an integer interval for stream timing; the `advance` method iterates the parser and handles the emitted sequences until the interval is exceeded, returning the number of parsed sequencees, elapsed time (number of $k$-mers), and a `bool` value for whether the parser has been exhausted.
+
+Clients derive `FileProcessor` to implement sequence handling.
+`InserterProcessor` takes a class with an `insert_sequence` method as a template parameter, calling `insert_sequence` on every sequence in the stream.
+This is used to build and compact dBGs and update sketches.
+Similarly, `goetia::FilterProcessor` has a template argument that expects a class implementing a `filter_sequence` method, which should return a `bool` indicating whether a sequence passes some critera; this is used, for example, for the solid filter and digital normalization implementations.

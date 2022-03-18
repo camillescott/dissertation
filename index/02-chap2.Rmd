@@ -85,6 +85,8 @@ During streaming sketching, the distance functions $\delta ( A_j, A_{j+1} )$ are
 When our sketch is a `sourmash` Min-hash sketch, $\delta$ is $1 - Jaccard$, where $Jaccard$ is the Jaccard similarity.
 For the `draff` sketch, $\delta$ can be any standard distance function: we commonly use the Euclidean, cosine, correlation, and Canberra [@doi:10.1093/comjnl/9.1.60] distances.
 
+\newpage
+
 ## Results
 
 ### Rolling Signature Distances Display Saturation Behavior
