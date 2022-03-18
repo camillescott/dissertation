@@ -11,8 +11,6 @@ Camille Scott and C. Titus Brown
 \end{description}
 \end{sizepar}
 
-
-
 ## Abstract
 
 Traditionally, approaches for sequence fragment analysis such as assembly have been off-line; assembly, in particular, has been a process in which all data is first loaded into memory (generally, a graph abstraction) before further processing to extract

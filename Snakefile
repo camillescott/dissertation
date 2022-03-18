@@ -44,6 +44,18 @@ rule build_thesis:
   """
 
 
+rule extract_title_page:
+  output: 'filing/title_page.pdf'
+  input: 'index/_book/dissertation.pdf'
+  shell: "pdfjam {input} 1 -o {output}"
+
+
+rule extract_abstract:
+  output: 'filing/01_abstract.pdf'
+  input: 'index/_book/dissertation.pdf'
+  shell: "pdfjam {input} 5 -o {output}"
+
+
 rule clone_goetia:
   output: 'build/goetia/README.md'
   shell: '''
