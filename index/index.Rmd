@@ -17,7 +17,7 @@ abstract: |
   This dissertation extends that work by exploring streaming implementations of several core approaches. First, we introduce a method for single-pass construction of the compact de Bruijn graph, with support for novel methods of dynamic assembly graph analysis. Next, we explore the saturation behavior of streaming sequence sketches, and introduce a novel sketch we call `draff` which uses Universal $k$-mer Hitting Sets to represent the shape of assembly graphs. Finally, we introduce several pieces of research software for sequence comparison, transcript annotation, and phylogenetic tree building, which showcase accessible, open access design philosophies. We also introduce the `goetia` library and toolset for efficient de Bruijn graph algorithms in C++ and Python.
   
 acknowledgments: |
-  The process of my PhD and the production of this dissertation was a long and difficult process. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to the University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life. A PhD is a necessarily an effort supported by a whole community of people, and I have been privileged to have a community that is nothing short of phenomenal.
+  The process of my PhD and the production of this dissertation was a long and difficult journey. During it all, I transitioned genders, moved across the country and changed institutions from Michigan State University to the University of California Davis, met my partner and eventual wife, struggled through mental health problems, adopted a family of pets and found a network of close friends, and generally, built a life. A PhD is necessarily an effort supported by a whole community of people, and I have been privileged to find a community that is nothing short of phenomenal.
 
   My wife Clarissa, who has cherished, supported, and pushed me through thick and thin since we met here in Davis. 
 
@@ -27,14 +27,14 @@ acknowledgments: |
 
   Russell, who has served as a mentor, inspiration, sometimes therapist, and most importantly, a great friend. Without him, I would never have finished this program.
 
-  Paula, Megan, and Joe, all of whom provided encouragement in times when I was low.
+  Paula, Megan, and Joe, all of whom provided encouragement when I was low.
 
-  The members of the DIB Lab: Tessa, who has contibuted tons to dammit, and Luiz, who helped build out and explore draff; and of course, the many other lab members who have provided thoughtful feedback and discussion over the years.
+  The members of the DIB Lab: Tessa, who has contibuted tons to `dammit`, and Luiz, who helped build out and explore `draff`; and of course, the many other lab members who have provided thoughtful feedback and discussion over the years.
 
   And Star Trek, for instilling in me, from a young age, the idea that mashing together science and computers can cause all manner of fantastical phenomena. Make it so!
 
 dedication: |
-  "*Someone once told me that time was a predator that stalked us all our lives. But I rather believe than time is a companion who goes with us on the journey, and reminds us to cherish every moment because they'll never come again. What we leave behind is not as important how we lived... after all, Number One, we're only mortal.*"    
+  "*Someone once told me that time was a predator that stalked us all our lives. But I rather believe that time is a companion who goes with us on the journey and reminds us to cherish every moment, because they'll never come again. What we leave behind is not as important as how we lived... after all, Number One, we're only mortal.*"
   (Captain Jean-Luc Picard, USS Enterprise (NCC-1701-D), United Federation of Planets)"
 # End of UCD thesis fields
 knit: "bookdown::render_book"
