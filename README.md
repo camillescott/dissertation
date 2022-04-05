@@ -2,7 +2,7 @@
 
 PhD dissertation for UC Davis written with [bookdown](https://bookdown.org/) using a modified [aggiedown](https://github.com/ryanpeek/aggiedown) and [manubot](https://manubot.org/).
 
-The built PDF can be found by:
+A built PDF can be found by:
 * Navigating to [Actions](https://github.com/camillescott/dissertation/actions)
 * Select most recent commit
 * Scroll down to artifacts.
